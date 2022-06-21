@@ -4,6 +4,8 @@ bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/mast
 npm i node-red-dashboard
 npm install node-red-contrib-amazon-echo
 sudo apt-get install hostapd && sudo apt-get install dnsmasq
+sudo systemctl stop hostapd
+sudo systemctl stop dnsmasq
 PACKAGES="python-pip"
 sudo apt-get install $PACKAGES -y
 pip install ws281x
@@ -26,3 +28,4 @@ sed -i "server {listen 80;
 sudo ln -s /etc/nginx/sites-available/node /etc/nginx/sites-enabled/node
 sudo cd 
 sudo reboot
+# still needs wifi access point setup and debugging
