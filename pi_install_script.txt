@@ -1,0 +1,28 @@
+sudo apt-get update && sudo apt-get upgrade -y
+sudo hostname -b wordclock
+bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered)
+npm i node-red-dashboard
+npm install node-red-contrib-amazon-echo
+sudo apt-get install hostapd && sudo apt-get install dnsmasq
+PACKAGES="python-pip"
+sudo apt-get install $PACKAGES -y
+pip install ws281x
+sudo systemctl enable nodered.service
+sudo rm /etc/ssh/ssh_host_*
+sudo dpkg-reconfigure openssh-server
+sudo service ssh restart
+sudo apt-get install nginx #web server for port forwarding of node-red
+sudo rm /etc/nginx/sites-enabled/default
+sudo cd /etc/nginx/sites-available
+touch node
+sed -i "server {listen 80;
+	server_name wordclock.de;
+		location /ui {
+		proxy_set_header X-Forwarded-For $remote_addr;
+		proxy_set_header Host $http_host;
+		proxy_pass "http://127.0.0.1:1880";
+		}
+	}" node
+sudo ln -s /etc/nginx/sites-available/node /etc/nginx/sites-enabled/node
+sudo cd 
+sudo reboot
