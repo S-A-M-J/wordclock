@@ -18,23 +18,12 @@ LED_CHANNEL = 0
 # LED_STRIP = ws.SK6812_STRIP_RGBW
 LED_STRIP = ws.SK6812W_STRIP
 
-updateCorner = true
-updateWords = true
 
 clockcolor = [255,255,255,255]
-
-# Define functions which animate LEDs in various ways.
-def colorWipe(strip, color, wait_ms=50):
-    """Wipe color across display a pixel at a time."""
-    for i in range(strip.numPixels()):
-        strip.setPixelColor(i, color)
-        strip.show()
-        time.sleep(wait_ms / 1000.0)
 
 corners = [0,12,113,101]
 
 uhr = [1,2,3]
-
 
 ein = []
 eins = []
@@ -59,7 +48,13 @@ zehnMin = [78,79,80,81]
 zwanzigMin = [82,83,84,85,86,87,88]
 fuenfMin =[1,2,3,4]
 
-
+# Define functions which animate LEDs in various ways.
+def colorWipe(strip, color, wait_ms=50):
+    """Wipe color across display a pixel at a time."""
+    for i in range(strip.numPixels()):
+        strip.setPixelColor(i, color)
+        strip.show()
+        
 def setWord(wordLeds, clockColorSet):
     for element in wordLeds:
         strip.setPixelColor(element, clockColorSet[0], clockColorSet[1], clockColorSet[2], clockColorSet[3])
