@@ -6,9 +6,10 @@ npm install node-red-contrib-amazon-echo
 sudo apt-get install hostapd && sudo apt-get install dnsmasq
 sudo systemctl stop hostapd
 sudo systemctl stop dnsmasq
-PACKAGES="python-pip"
+PACKAGES="python3-pip"
 sudo apt-get install $PACKAGES -y
-pip install ws281x
+sudo apt-get install scons
+sudo pip install rpi_ws281x
 sudo systemctl enable nodered.service
 sudo rm /etc/ssh/ssh_host_*
 sudo dpkg-reconfigure openssh-server
