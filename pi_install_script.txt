@@ -1,8 +1,10 @@
 sudo apt-get update && sudo apt-get upgrade -y
 sudo hostname -b wordclock
 bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered)
+cd $HOME/.node-red
 npm i node-red-dashboard
 npm install node-red-contrib-amazon-echo
+cd
 sudo apt-get install hostapd && sudo apt-get install dnsmasq
 sudo systemctl stop hostapd
 sudo systemctl stop dnsmasq
