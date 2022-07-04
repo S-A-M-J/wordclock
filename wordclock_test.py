@@ -31,12 +31,13 @@ def colorWipe(strip, color, wait_ms=50):
         strip.show()
         time.sleep(wait_ms / 1000.0)
 
-minPlus4 = 0
-minPlus1 = 12
-minPlus2 = 113
-minPlus3 = 101
+corners = [0,12,113,101]
+
 uhr = [1,2,3]
+
+
 ein = []
+eins = []
 zwei = [34,35,36]
 drei = [74,75,76,77]
 vier = [23,24,25,26]
@@ -58,24 +59,88 @@ zehnMin = [78,79,80,81]
 zwanzigMin = [82,83,84,85,86,87,88]
 fuenfMin =[1,2,3,4]
 
-def setWord(wordLeds, red, green, blue, white):
+
+def setWord(wordLeds, clockColorSet):
     for element in wordLeds:
-        strip.setPixelColor(element, Color(int(red), int(green), int(blue), int(white))
+        strip.setPixelColor(element, clockColorSet[0], clockColorSet[1], clockColorSet[2], clockColorSet[3])
 
 # Main program logic follows:
 if __name__ == '__main__':
-    red = sys.argv[4]
-    blue = sys.argv[5]
-    green = sys.argv[6]
-    white = sys.argv[7]
+    hours = sys.argv[1]%12
+    minutes = sys.argv[2] - sys.argv[2]%5
+    brightness = sys.argv[3]
+    clockcolor[0] = sys.argv[4]
+    clockcolor[1] = sys.argv[5]
+    clockcolor[2] = sys.argv[6]
+    clockcolor[3] = sys.argv[7]
+    highestValue = 0
+    for elements in clockcolor:
+        if element > highestValue:
+            highestValue = element
+        element = element/100*brightness
+    #print('Press Ctrl-C to quit.')
     # Create PixelStrip object with appropriate configuration.
     strip = PixelStrip(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL, LED_STRIP)
     # Intialize the library (must be called once before other functions).
     strip.begin()
-
-    print('Press Ctrl-C to quit.')
-    for x in range(5):
-        # Color wipe animations.
-        colorWipe(strip, Color(int(red), int(blue), int(green), int(white)), 0)  # Composite White + White LED wipe
-        time.sleep(2)
-        colorWipe(strip, Color(0 ,0 ,0 ,0), 0) 
+    if highestValue == 0:
+        colorWipe(strip,Color(0,0,0,0))
+        exit()
+        
+    activeCorners = minutes%5
+    for x in activeCorners:
+        setWord(corners[x],clockcolor)
+    
+        
+    if minutes >= 25;
+        hours = hours+1;
+        
+    if hours == 1:
+        if minutes<5:
+            setWord(ein,clockcolor)
+        else:
+            setWord(eins,clockcolor)
+    elif hours == 2:
+        setWord(zwei,clockcolor)
+    elif hours == 3:
+        setWord(drei,clockcolor)
+    elif hours == 4:
+        setWord(vier,clockcolor)
+    elif hours == 5:
+        setWord(fuenf,clockcolor)
+    elif hours == 6:
+        setWord(sechs,clockcolor)
+    elif hours == 7:
+        setWord(sieben,clockcolor)
+    elif hours == 8:
+        setWord(acht,clockcolor)
+    elif hours == 9:
+        setWord(neun,clockcolor)
+    elif hours == 10:
+        setWord(zehn,clockcolor)
+    elif hours == 11:
+        setWord(elf,clockcolor)
+    elif hours == 0:
+        setWord(zwoelf,clockcolor)
+    
+    if minutes < 5:
+        setWord(uhr,clockcolor)
+    else:
+        if minutes == 5 or minutes == 25 or minutes == 35 or minutes == 55:
+            setWord(fuenfMin,clockcolor)
+        elif minutes == 10 or minutes == 50:
+            setWord(zehnMin,clockcolor)
+        elif minutes == 15 or minutes == 45:
+            setWord(viertel,clockcolor)
+    
+        if minutes >=25 and minutes <= 35:
+            setWord(halb,clockcolor)
+        
+        if minutes < 25 or minutes == 35:
+            setWord(nach,clockcolor)
+        elif minutes == 25 or minutes>35:
+            setWord(vor,clockcolor)
+    
+    strip.show()
+    exit()
+    
