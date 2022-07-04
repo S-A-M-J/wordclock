@@ -57,7 +57,7 @@ def colorWipe(strip, color, wait_ms=50):
         
 def setWord(wordLeds, clockColorSet):
     for element in wordLeds:
-        strip.setPixelColor(element, clockColorSet[0], clockColorSet[1], clockColorSet[2], clockColorSet[3])
+        strip.setPixelColor(element, Color(clockColorSet[0], clockColorSet[1], clockColorSet[2], clockColorSet[3]))
 
 # Main program logic follows:
 if __name__ == '__main__':
