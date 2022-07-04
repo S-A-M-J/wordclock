@@ -50,6 +50,10 @@ zehnM = [78,79,80,81]
 zwanzig = [82,83,84,85,86,87,88]
 fuenf =[1,2,3,4]
 
+def setWord(wordLeds, red, green, blue, white):
+    for element in wordLeds:
+        strip.setPixelColor(element, Color(int(red), int(green), int(blue), int(white))
+
 # Main program logic follows:
 if __name__ == '__main__':
     red = sys.argv[4]
