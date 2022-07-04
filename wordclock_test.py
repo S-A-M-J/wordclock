@@ -18,6 +18,10 @@ LED_CHANNEL = 0
 # LED_STRIP = ws.SK6812_STRIP_RGBW
 LED_STRIP = ws.SK6812W_STRIP
 
+updateCorner = true
+updateWords = true
+
+clockcolor = [255,255,255,255]
 
 # Define functions which animate LEDs in various ways.
 def colorWipe(strip, color, wait_ms=50):
@@ -32,23 +36,27 @@ minPlus1 = 12
 minPlus2 = 113
 minPlus3 = 101
 uhr = [1,2,3]
-sechs = [6,7,8,9,10]
-zehn = [17,18,19,20]
+ein = []
+zwei = [34,35,36]
+drei = [74,75,76,77]
 vier = [23,24,25,26]
+fuenf = []
+sechs = [6,7,8,9,10]
+sieben = [38,39,40,41,42,43,44]
 acht = [13,14,15,16]
 neun = [27,28,29,30]
+zehn = [17,18,19,20]
 elf = [31,32,33]
-zwei = [34,35,36]
-sieben = [38,39,40,41,42,43,44]
 zwoelf = [46,47,48,49,50]
-halb = [52,53,54,55]
+
 nach = [57,58,59,60]
 vor = [62,63,64]
+
+halb = [52,53,54,55]
 viertel = [67,68,69,70,71,72,73]
-drei = [74,75,76,77]
-zehnM = [78,79,80,81]
-zwanzig = [82,83,84,85,86,87,88]
-fuenf =[1,2,3,4]
+zehnMin = [78,79,80,81]
+zwanzigMin = [82,83,84,85,86,87,88]
+fuenfMin =[1,2,3,4]
 
 def setWord(wordLeds, red, green, blue, white):
     for element in wordLeds:
