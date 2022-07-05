@@ -77,18 +77,20 @@ def setWord(wordLeds, clockColorSet):
 
 # Main program logic follows:
 if __name__ == '__main__':
-    hours = sys.argv[1]%12
-    minutes = sys.argv[2] - sys.argv[2]%5
-    brightness = sys.argv[3]
-    clockcolor[0] = sys.argv[4]
-    clockcolor[1] = sys.argv[5]
-    clockcolor[2] = sys.argv[6]
-    clockcolor[3] = sys.argv[7]
+    hours = int(sys.argv[1])
+    hours = hours % 12
+    minutes = int(sys.argv[2])
+    minutes = minutes - minutes % 5
+    brightness = int(sys.argv[3])
+    clockcolor[0] = int(sys.argv[4])
+    clockcolor[1] = int(sys.argv[5])
+    clockcolor[2] = int(sys.argv[6])
+    clockcolor[3] = int(sys.argv[7])
     highestValue = 0
-    for elements in clockcolor:
+    for element in clockcolor:
         if element > highestValue:
             highestValue = element
-        element = element/100*brightness
+        element = element / 100 * brightness
     #print('Press Ctrl-C to quit.')
     # Create PixelStrip object with appropriate configuration.
     strip = PixelStrip(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL, LED_STRIP)
@@ -99,13 +101,13 @@ if __name__ == '__main__':
         colorWipe(strip,Color(0,0,0,0))
         exit()
         
-    activeCorners = minutes%5
+    activeCorners = minutes % 5
     for x in activeCorners:
         setWord(corners[x],clockcolor)
     
         
-    if minutes >= 25;
-        hours = hours+1;
+    if minutes >= 25:
+        hours = hours+1
         
     if hours == 1:
         if minutes<5:
