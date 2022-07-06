@@ -8,7 +8,7 @@ import sys
 from rpi_ws281x import Color, PixelStrip, ws
 
 # LED strip configuration:
-LED_COUNT = 1        # Number of LED pixels.
+LED_COUNT = 114        # Number of LED pixels.
 LED_PIN = 18          # GPIO pin connected to the pixels (must support PWM!).
 LED_FREQ_HZ = 800000  # LED signal frequency in hertz (usually 800khz)
 LED_DMA = 10          # DMA channel to use for generating signal (try 10)
@@ -35,34 +35,35 @@ gammaList = [0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
   177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
   215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255]
 
-clockcolor = [255,255,255,255]
-
 corners = [0,12,113,101]
 
-uhr = [1,2,3]
+uhr = [9,10,11]
 
-ein = []
-eins = []
-zwei = [34,35,36]
-drei = [74,75,76,77]
-vier = [23,24,25,26]
-fuenf = []
-sechs = [6,7,8,9,10]
-sieben = [38,39,40,41,42,43,44]
-acht = [13,14,15,16]
+es = [111,112]
+ist = [109,108,107]
+
+ein = [100,101,102]
+eins = [100,101,102,103]
+zwei = [46,47,48,49]
+drei = [41,42,43,44]
+vier = [31,32,33,34]
+fuenf = [35,36,37,38]
+sechs = [2,3,4,5,6]
+sieben = [51,52,53,54,55,56,57]
+acht = [19,20,21,22]
 neun = [27,28,29,30]
-zehn = [17,18,19,20]
-elf = [31,32,33]
-zwoelf = [46,47,48,49,50]
+zehn = [15,16,17,18]
+elf = [24,25,26]
+zwoelf = [58,59,60,61,62]
 
-nach = [57,58,59,60]
-vor = [62,63,64]
+nach = [69,70,71,72]
+vor = [74,75,76]
 
-halb = [52,53,54,55]
-viertel = [67,68,69,70,71,72,73]
-zehnMin = [78,79,80,81]
-zwanzigMin = [82,83,84,85,86,87,88]
-fuenfMin =[1,2,3,4]
+halb = [64,65,66,67]
+viertel = [79,80,81,82,83,84,85]
+zehnMin = [90,91,92,93]
+zwanzigMin = [94,95,96,97,98,99,100]
+fuenfMin =[102,103,104,105]
 
 # Define functions which animate LEDs in various ways.
 def colorWipe(strip, color, wait_ms=50):
@@ -72,8 +73,10 @@ def colorWipe(strip, color, wait_ms=50):
         strip.show()
         
 def setWord(wordLeds, clockColorSet):
-    for element in wordLeds:
-        strip.setPixelColor(element, Color(clockColorSet[0], clockColorSet[1], clockColorSet[2], clockColorSet[3]))
+    for i in wordLeds:
+        strip.setPixelColor(i, Color(clockColorSet[0], clockColorSet[1], clockColorSet[2], clockColorSet[3]))
+        #strip.show()
+        print(i)
 
 # Main program logic follows:
 if __name__ == '__main__':
@@ -81,30 +84,32 @@ if __name__ == '__main__':
     hours = hours % 12
     minutes = int(sys.argv[2])
     minutes = minutes - minutes % 5
-    brightness = int(sys.argv[3])
-    clockcolor[0] = int(sys.argv[4])
-    clockcolor[1] = int(sys.argv[5])
-    clockcolor[2] = int(sys.argv[6])
-    clockcolor[3] = int(sys.argv[7])
+    brightnessFloat = float(sys.argv[3])
+    brightness = round(brightnessFloat)
+    clockcolor = [int(sys.argv[4]),int(sys.argv[5]),int(sys.argv[6]),int(sys.argv[7])]
     highestValue = 0
     for element in clockcolor:
+        #element = element / 100 * brightness
+        #print(element)
         if element > highestValue:
             highestValue = element
-        element = element / 100 * brightness
-    #print('Press Ctrl-C to quit.')
+    #print(brightness)
     # Create PixelStrip object with appropriate configuration.
     strip = PixelStrip(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT, LED_BRIGHTNESS, LED_CHANNEL, LED_STRIP)
     # Intialize the library (must be called once before other functions).
     strip.begin()
     strip.setGamma(gammaList)
+    
+    setWord(es,clockcolor)
+    setWord(ist,clockcolor)
     if highestValue == 0:
-        colorWipe(strip,Color(0,0,0,0))
+        colorWipe(strip,Color(255,0,0,0))
+        print('clock is turned off.')
         exit()
         
     activeCorners = minutes % 5
-    for x in activeCorners:
+    for x in range(activeCorners-1):
         setWord(corners[x],clockcolor)
-    
         
     if minutes >= 25:
         hours = hours+1
@@ -154,7 +159,8 @@ if __name__ == '__main__':
             setWord(nach,clockcolor)
         elif minutes == 25 or minutes>35:
             setWord(vor,clockcolor)
-    
+    strip.setBrightness(int(brightness))
     strip.show()
+    print('program finished')
     exit()
     
