@@ -35,15 +35,15 @@ gammaList = [0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
   177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
   215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255]
 
-corners = [0,12,113,101]
+corners = [0,113,101,12]
 
 uhr = [9,10,11]
 
 es = [111,112]
 ist = [109,108,107]
 
-ein = [100,101,102]
-eins = [100,101,102,103]
+ein = [48,49,50]
+eins = [48,49,50,51]
 zwei = [46,47,48,49]
 drei = [41,42,43,44]
 vier = [31,32,33,34]
@@ -66,24 +66,25 @@ zwanzigMin = [94,95,96,97,98,99,100]
 fuenfMin =[102,103,104,105]
 
 # Define functions which animate LEDs in various ways.
-def colorWipe(strip, color, wait_ms=50):
+def colorWipe(strip, color):
     """Wipe color across display a pixel at a time."""
     for i in range(strip.numPixels()):
         strip.setPixelColor(i, color)
-        strip.show()
+    strip.show()
         
 def setWord(wordLeds, clockColorSet):
     for i in wordLeds:
         strip.setPixelColor(i, Color(clockColorSet[0], clockColorSet[1], clockColorSet[2], clockColorSet[3]))
         #strip.show()
-        print(i)
+        #print(i)
 
 # Main program logic follows:
 if __name__ == '__main__':
     hours = int(sys.argv[1])
-    hours = hours % 12
     minutes = int(sys.argv[2])
-    minutes = minutes - minutes % 5
+    if minutes >= 25:
+        hours = hours+1
+    hours = hours % 12
     brightnessFloat = float(sys.argv[3])
     brightness = round(brightnessFloat)
     clockcolor = [int(sys.argv[4]),int(sys.argv[5]),int(sys.argv[6]),int(sys.argv[7])]
@@ -103,17 +104,18 @@ if __name__ == '__main__':
     setWord(es,clockcolor)
     setWord(ist,clockcolor)
     if highestValue == 0:
-        colorWipe(strip,Color(255,0,0,0))
+        colorWipe(strip,Color(0,0,0,0))
         print('clock is turned off.')
         strip._cleanup()
         exit()
         
     activeCorners = minutes % 5
-    for x in range(activeCorners-1):
-        setWord(corners[x],clockcolor)
-        
-    if minutes >= 25:
-        hours = hours+1
+    print(activeCorners)
+    for x in range(activeCorners):
+        strip.setPixelColor(corners[x], Color(clockcolor[0], clockcolor[1], clockcolor[2], clockcolor[3]))
+     
+    minutes = minutes - activeCorners
+    
         
     if hours == 1:
         if minutes<5:
@@ -152,6 +154,8 @@ if __name__ == '__main__':
             setWord(zehnMin,clockcolor)
         elif minutes == 15 or minutes == 45:
             setWord(viertel,clockcolor)
+        elif minutes == 20 or minutes == 40:
+            setWord(zwanzigMin,clockcolor)
     
         if minutes >=25 and minutes <= 35:
             setWord(halb,clockcolor)
