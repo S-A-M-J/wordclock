@@ -105,6 +105,7 @@ if __name__ == '__main__':
     if highestValue == 0:
         colorWipe(strip,Color(255,0,0,0))
         print('clock is turned off.')
+        strip._cleanup()
         exit()
         
     activeCorners = minutes % 5
@@ -162,5 +163,6 @@ if __name__ == '__main__':
     strip.setBrightness(int(brightness))
     strip.show()
     print('program finished')
+    strip._cleanup()
     exit()
     
