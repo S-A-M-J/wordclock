@@ -1570,7 +1570,7 @@
                 "t": "set",
                 "p": "payload",
                 "pt": "msg",
-                "to": "In order to use the clock online and with alexa please choose the wifi on the right, enter your password and hit connect. The clock will then restart (will take up to a few minutes). After that you can discover the clock on alexa as \"uhr\" or control by entering the same wifi and opening wordclock.local:1880/ui",
+                "to": "In order to use the clock online and all alexa features please choose the wifi on the right, enter your password and hit update. Afterwards hit \"Switch to online\". Then you can discover the clock as an alexa device named \"uhr\" or control by entering the same wifi and opening wordclock.local:1880/ui",
                 "tot": "str"
             }
         ],
@@ -3087,7 +3087,8 @@
             [
                 "e845b7fe03e24989",
                 "89aa1343bdaf40fc",
-                "ca901a04c15022cd"
+                "f75e1eeba3845757",
+                "c07b416bdece9b53"
             ]
         ]
     },
@@ -3103,7 +3104,7 @@
         "winHide": false,
         "oldrc": false,
         "name": "",
-        "x": 410,
+        "x": 450,
         "y": 360,
         "wires": [
             [],
@@ -3240,7 +3241,7 @@
         "topic": "",
         "name": "",
         "x": 870,
-        "y": 320,
+        "y": 360,
         "wires": []
     },
     {
@@ -3259,7 +3260,7 @@
         "topic": "",
         "name": "",
         "x": 870,
-        "y": 520,
+        "y": 480,
         "wires": []
     },
     {
@@ -3282,7 +3283,7 @@
         "to": "",
         "reg": false,
         "x": 630,
-        "y": 480,
+        "y": 440,
         "wires": [
             [
                 "bc637601f75db692",
@@ -3476,7 +3477,7 @@
         "to": "",
         "reg": false,
         "x": 630,
-        "y": 340,
+        "y": 400,
         "wires": [
             [
                 "fd83a620ddec6295",
@@ -3502,7 +3503,7 @@
         "allowrate": false,
         "outputs": 1,
         "x": 870,
-        "y": 360,
+        "y": 400,
         "wires": [
             [
                 "832e979c7f42a206"
@@ -3540,7 +3541,7 @@
         "allowrate": false,
         "outputs": 1,
         "x": 870,
-        "y": 460,
+        "y": 440,
         "wires": [
             [
                 "832e979c7f42a206"
@@ -3705,7 +3706,7 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 410,
+        "x": 450,
         "y": 420,
         "wires": [
             [
@@ -3814,47 +3815,83 @@
         ]
     },
     {
-        "id": "bd1a04afc96cf5fd",
-        "type": "inject",
+        "id": "c07b416bdece9b53",
+        "type": "delay",
         "z": "a70220f36865d0c9",
-        "name": "On start",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": true,
-        "onceDelay": "2",
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 120,
-        "y": 360,
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "10",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 490,
+        "y": 520,
         "wires": [
-            []
+            [
+                "1b1b9372852f739d"
+            ]
         ]
     },
     {
-        "id": "ca901a04c15022cd",
-        "type": "debug",
+        "id": "f75e1eeba3845757",
+        "type": "change",
         "z": "a70220f36865d0c9",
         "name": "",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 410,
-        "y": 500,
-        "wires": []
+        "rules": [
+            {
+                "t": "set",
+                "p": "enabled",
+                "pt": "msg",
+                "to": "false",
+                "tot": "bool"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 490,
+        "y": 480,
+        "wires": [
+            [
+                "11e32e497b2bd329"
+            ]
+        ]
+    },
+    {
+        "id": "1b1b9372852f739d",
+        "type": "change",
+        "z": "a70220f36865d0c9",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "enabled",
+                "pt": "msg",
+                "to": "true",
+                "tot": "bool"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 690,
+        "y": 520,
+        "wires": [
+            [
+                "11e32e497b2bd329"
+            ]
+        ]
     },
     {
         "id": "ca105ab5370d125e",
@@ -3916,6 +3953,81 @@
         "libs": [],
         "x": 640,
         "y": 240,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "bb6cb0ca2c7c3fcb",
+        "type": "delay",
+        "z": "4cca685967a3b05e",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "10",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 410,
+        "y": 260,
+        "wires": [
+            [
+                "368ba5fd1448a7c5"
+            ]
+        ]
+    },
+    {
+        "id": "eb959ef8c4776bfd",
+        "type": "change",
+        "z": "4cca685967a3b05e",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "enabled",
+                "pt": "msg",
+                "to": "false",
+                "tot": "bool"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 410,
+        "y": 220,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "368ba5fd1448a7c5",
+        "type": "change",
+        "z": "4cca685967a3b05e",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "enabled",
+                "pt": "msg",
+                "to": "true",
+                "tot": "bool"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 610,
+        "y": 260,
         "wires": [
             []
         ]
