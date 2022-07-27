@@ -2,7 +2,7 @@
 # Author: S.A.M.
 #
 
-import time
+
 import sys
 
 from rpi_ws281x import Color, PixelStrip, ws
