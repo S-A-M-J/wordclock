@@ -338,11 +338,12 @@
         "max": "100",
         "step": 1,
         "className": "",
-        "x": 670,
-        "y": 180,
+        "x": 570,
+        "y": 400,
         "wires": [
             [
-                "6f6c50d024b1bcdd"
+                "6f6c50d024b1bcdd",
+                "50d902667d34c4dd"
             ]
         ]
     },
@@ -370,8 +371,8 @@
         "topic": "topic",
         "topicType": "msg",
         "className": "",
-        "x": 910,
-        "y": 60,
+        "x": 650,
+        "y": 280,
         "wires": [
             [
                 "2da745fb0e420a20"
@@ -397,11 +398,11 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 880,
-        "y": 180,
+        "x": 820,
+        "y": 400,
         "wires": [
             [
-                "9a823b7a5998551d"
+                "2b0921775b278d3e"
             ]
         ]
     },
@@ -413,22 +414,22 @@
         "rules": [
             {
                 "t": "set",
-                "p": "led.color.red",
-                "pt": "global",
+                "p": "clock.led.red",
+                "pt": "msg",
                 "to": "payload.r",
                 "tot": "msg"
             },
             {
                 "t": "set",
-                "p": "led.color.blue",
-                "pt": "global",
+                "p": "clock.led.blue",
+                "pt": "msg",
                 "to": "payload.b",
                 "tot": "msg"
             },
             {
                 "t": "set",
-                "p": "led.color.green",
-                "pt": "global",
+                "p": "clock.led.green",
+                "pt": "msg",
                 "to": "payload.g",
                 "tot": "msg"
             }
@@ -438,30 +439,13 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 1110,
-        "y": 60,
+        "x": 890,
+        "y": 280,
         "wires": [
             [
                 "3a21398ecc07a28b"
             ]
         ]
-    },
-    {
-        "id": "32b4d244679e7003",
-        "type": "debug",
-        "z": "8e8ef3d5174fe14f",
-        "name": "",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1250,
-        "y": 180,
-        "wires": []
     },
     {
         "id": "0cab92e989ee80be",
@@ -523,8 +507,8 @@
         "topic": "topic",
         "topicType": "msg",
         "className": "",
-        "x": 750,
-        "y": 120,
+        "x": 650,
+        "y": 340,
         "wires": [
             [
                 "700252081ff28bcf"
@@ -536,17 +520,18 @@
         "type": "function",
         "z": "8e8ef3d5174fe14f",
         "name": "",
-        "func": "var str = msg.payload;\nvar values = str.split(',');\nmsg.payload = {\"r\":parseInt(values[0]),\"g\":parseInt(values[1]),\"b\":parseInt(values[2])}\n\nreturn msg;",
+        "func": "let str = msg.payload;\nlet values = str.split(',');\nmsg.payload = {\"r\":parseInt(values[0]),\"g\":parseInt(values[1]),\"b\":parseInt(values[2])}\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 920,
-        "y": 120,
+        "x": 820,
+        "y": 340,
         "wires": [
             [
-                "2da745fb0e420a20"
+                "2da745fb0e420a20",
+                "ddf6cb31a64ffe43"
             ]
         ]
     },
@@ -563,21 +548,8 @@
         "format": "{{msg.payload}}",
         "layout": "row-spread",
         "className": "",
-        "x": 1530,
-        "y": 60,
-        "wires": []
-    },
-    {
-        "id": "9a823b7a5998551d",
-        "type": "link out",
-        "z": "8e8ef3d5174fe14f",
-        "name": "led update",
-        "mode": "link",
-        "links": [
-            "9e9392e174404df3"
-        ],
-        "x": 1365,
-        "y": 240,
+        "x": 1250,
+        "y": 260,
         "wires": []
     },
     {
@@ -586,11 +558,11 @@
         "z": "8e8ef3d5174fe14f",
         "name": "brighnessInput",
         "links": [
-            "6afbed6874c83a7d",
-            "af3145eff3460291"
+            "8ac40af7f58a31b9",
+            "e3eb72c24db848e2"
         ],
-        "x": 205,
-        "y": 180,
+        "x": 145,
+        "y": 400,
         "wires": [
             [
                 "960cd04cac5f31d9"
@@ -623,11 +595,12 @@
         "offcolor": "",
         "animate": true,
         "className": "",
-        "x": 520,
-        "y": 300,
+        "x": 480,
+        "y": 140,
         "wires": [
             [
-                "3b48e7dade7c3e09"
+                "3b48e7dade7c3e09",
+                "e0df07993f95631d"
             ]
         ]
     },
@@ -639,8 +612,8 @@
         "rules": [
             {
                 "t": "set",
-                "p": "led.state",
-                "pt": "global",
+                "p": "clock.on",
+                "pt": "msg",
                 "to": "payload",
                 "tot": "msg"
             }
@@ -650,11 +623,12 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 720,
-        "y": 300,
+        "x": 670,
+        "y": 140,
         "wires": [
             [
-                "9fad21d16172f3f0"
+                "9fad21d16172f3f0",
+                "1e091c600aaddf85"
             ]
         ]
     },
@@ -670,6 +644,11 @@
             {
                 "p": "topic",
                 "vt": "str"
+            },
+            {
+                "p": "clock.on",
+                "v": "true",
+                "vt": "bool"
             }
         ],
         "repeat": "",
@@ -679,11 +658,10 @@
         "topic": "ON",
         "payload": "true",
         "payloadType": "bool",
-        "x": 160,
-        "y": 300,
+        "x": 220,
+        "y": 60,
         "wires": [
             [
-                "75a844e9f2b68a2a",
                 "4287d842f6fa4383",
                 "416aafec783e043d"
             ]
@@ -719,8 +697,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 950,
-        "y": 300,
+        "x": 910,
+        "y": 120,
         "wires": [
             [
                 "5a66c072cae8bb8b"
@@ -733,8 +711,8 @@
         "z": "8e8ef3d5174fe14f",
         "name": "",
         "events": "all",
-        "x": 1120,
-        "y": 300,
+        "x": 1100,
+        "y": 120,
         "wires": [
             []
         ]
@@ -758,8 +736,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 470,
-        "y": 140,
+        "x": 370,
+        "y": 360,
         "wires": [
             [
                 "0cab92e989ee80be"
@@ -773,10 +751,10 @@
         "name": "on/off_switch",
         "links": [
             "4d0e5d595547de4b",
-            "6afbed6874c83a7d"
+            "8ac40af7f58a31b9"
         ],
-        "x": 95,
-        "y": 380,
+        "x": 155,
+        "y": 180,
         "wires": [
             [
                 "8c5d29b44156b117"
@@ -802,8 +780,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 470,
-        "y": 180,
+        "x": 370,
+        "y": 400,
         "wires": [
             [
                 "3db195648e789fae"
@@ -824,7 +802,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 950,
-        "y": 540,
+        "y": 760,
         "wires": []
     },
     {
@@ -838,10 +816,10 @@
         "read": false,
         "bcm": true,
         "x": 140,
-        "y": 480,
+        "y": 700,
         "wires": [
             [
-                "d6c8e489318f7738"
+                "922960ab852f3307"
             ]
         ]
     },
@@ -851,12 +829,12 @@
         "z": "8e8ef3d5174fe14f",
         "name": "",
         "pin": "24",
-        "intype": "tri",
+        "intype": "down",
         "debounce": "25",
         "read": false,
         "bcm": true,
-        "x": 130,
-        "y": 540,
+        "x": 140,
+        "y": 760,
         "wires": [
             [
                 "8d8a0637910e2bc3"
@@ -882,7 +860,7 @@
         "repair": false,
         "outputs": 2,
         "x": 450,
-        "y": 480,
+        "y": 700,
         "wires": [
             [
                 "806d6495fe56f639"
@@ -919,10 +897,11 @@
         "to": "",
         "reg": false,
         "x": 650,
-        "y": 500,
+        "y": 720,
         "wires": [
             [
-                "4d0e5d595547de4b"
+                "4d0e5d595547de4b",
+                "4ac3280b03752e96"
             ]
         ]
     },
@@ -953,35 +932,11 @@
         "to": "",
         "reg": false,
         "x": 650,
-        "y": 460,
+        "y": 680,
         "wires": [
             [
-                "4d0e5d595547de4b"
-            ]
-        ]
-    },
-    {
-        "id": "d6c8e489318f7738",
-        "type": "switch",
-        "z": "8e8ef3d5174fe14f",
-        "name": "",
-        "property": "payload",
-        "propertyType": "msg",
-        "rules": [
-            {
-                "t": "eq",
-                "v": "1",
-                "vt": "num"
-            }
-        ],
-        "checkall": "true",
-        "repair": false,
-        "outputs": 1,
-        "x": 310,
-        "y": 480,
-        "wires": [
-            [
-                "922960ab852f3307"
+                "4d0e5d595547de4b",
+                "4ac3280b03752e96"
             ]
         ]
     },
@@ -994,8 +949,8 @@
         "links": [
             "ade0db0f18e6f51a"
         ],
-        "x": 825,
-        "y": 480,
+        "x": 845,
+        "y": 680,
         "wires": []
     },
     {
@@ -1003,19 +958,19 @@
         "type": "function",
         "z": "8e8ef3d5174fe14f",
         "name": "",
-        "func": "var brightness = global.get(\"led.brightness\");\n\nif(msg.payload == 1){\n    global.set(\"loop\",true);\n    msg.payload = 2;\n    return msg;\n} else if (msg.payload == 2){\n    loop = global.get(\"loop\");\n    if (loop){\n        brightness = brightness-5;\n        if (brightness<=5){\n            brightness = 100;\n        }\n    global.set(\"led.brightness\",brightness)\n    return msg;\n    }\n} else if (msg.payload == 0){\n    global.set(\"loop\",false);\n}\n\n",
+        "func": "let brightness = global.get(\"led.brightness\");\n\nif(msg.payload == 1){\n    global.set(\"loop\",true);\n    msg.payload = 2;\n    return msg;\n} else if (msg.payload == 2){\n    loop = global.get(\"loop\");\n    if (loop){\n        brightness = brightness-5;\n        if (brightness<=5){\n            brightness = 100;\n        }\n    global.set(\"led.brightness\",brightness)\n    return msg;\n    }\n} else if (msg.payload == 0){\n    global.set(\"loop\",false);\n}\n\n",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
         "x": 480,
-        "y": 540,
+        "y": 760,
         "wires": [
             [
                 "2b865dc77e9cc437",
                 "f6d65a307eb43191",
-                "af3145eff3460291"
+                "e3eb72c24db848e2"
             ]
         ]
     },
@@ -1037,26 +992,12 @@
         "allowrate": false,
         "outputs": 1,
         "x": 480,
-        "y": 600,
+        "y": 820,
         "wires": [
             [
                 "8d8a0637910e2bc3"
             ]
         ]
-    },
-    {
-        "id": "af3145eff3460291",
-        "type": "link out",
-        "z": "8e8ef3d5174fe14f",
-        "name": "dimm_output",
-        "mode": "link",
-        "links": [
-            "611fcfba31c64ef8",
-            "9e9392e174404df3"
-        ],
-        "x": 695,
-        "y": 580,
-        "wires": []
     },
     {
         "id": "9ad722288ab9bdd5",
@@ -1078,7 +1019,7 @@
         "step": "0.25",
         "className": "",
         "x": 190,
-        "y": 820,
+        "y": 1040,
         "wires": [
             [
                 "5f603031a917784f"
@@ -1105,7 +1046,7 @@
         "step": "0.25",
         "className": "",
         "x": 190,
-        "y": 860,
+        "y": 1080,
         "wires": [
             [
                 "709e5793c776d520"
@@ -1168,7 +1109,7 @@
         "topicType": "msg",
         "className": "",
         "x": 150,
-        "y": 900,
+        "y": 1120,
         "wires": [
             [
                 "a10545c1482f188f"
@@ -1189,7 +1130,7 @@
         "layout": "col-center",
         "className": "",
         "x": 930,
-        "y": 860,
+        "y": 1080,
         "wires": []
     },
     {
@@ -1197,14 +1138,14 @@
         "type": "function",
         "z": "8e8ef3d5174fe14f",
         "name": "",
-        "func": "var starttime = msg.payload[0];\nvar starttimeHours = Math.trunc(starttime);\nvar starttimeMin = starttime - parseInt(starttimeHours);\nstarttimeMin = starttimeMin*60;\nvar stoptime = msg.payload[1];\nvar stoptimeHours = Math.trunc(stoptime);\nvar stoptimeMin = stoptime - parseInt(stoptimeHours);\nstoptimeMin = stoptimeMin*60;\nvar rule = msg.payload[2];\nif (starttimeHours>=stoptimeHours){\n    var days = \" on the next day \";\n} else {\n    var days = \" \";\n}\nglobal.set(\"rule1.start.hour\",starttimeHours);\nglobal.set(\"rule1.start.min\",starttimeMin);\nglobal.set(\"rule1.stop.hour\",stoptimeHours);\nglobal.set(\"rule1.stop.hour\",stoptimeMin);\nglobal.set(\"rule1.rule\",rule);\nmsg.payload = \"From \"+ starttimeHours+\":\"+starttimeMin+\" to \"+stoptimeHours+\":\"+stoptimeMin+days+rule;\nreturn msg\n",
+        "func": "let starttime = msg.payload[0];\nlet starttimeHours = Math.trunc(starttime);\nlet starttimeMin = starttime - parseInt(starttimeHours);\nstarttimeMin = starttimeMin*60;\nlet stoptime = msg.payload[1];\nlet stoptimeHours = Math.trunc(stoptime);\nlet stoptimeMin = stoptime - parseInt(stoptimeHours);\nstoptimeMin = stoptimeMin*60;\nlet rule = msg.payload[2];\nif (starttimeHours>=stoptimeHours){\n    let days = \" on the next day \";\n} else {\n    let days = \" \";\n}\nglobal.set(\"rule1.start.hour\",starttimeHours);\nglobal.set(\"rule1.start.min\",starttimeMin);\nglobal.set(\"rule1.stop.hour\",stoptimeHours);\nglobal.set(\"rule1.stop.hour\",stoptimeMin);\nglobal.set(\"rule1.rule\",rule);\nmsg.payload = \"From \"+ starttimeHours+\":\"+starttimeMin+\" to \"+stoptimeHours+\":\"+stoptimeMin+days+rule;\nreturn msg\n",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
         "x": 720,
-        "y": 860,
+        "y": 1080,
         "wires": [
             [
                 "1f3249ace0ed62a8",
@@ -1233,10 +1174,11 @@
         "reduceInitType": "",
         "reduceFixup": "",
         "x": 570,
-        "y": 860,
+        "y": 1080,
         "wires": [
             [
-                "fb7056089f10b9b2"
+                "fb7056089f10b9b2",
+                "b8a2316ed2cded4e"
             ]
         ]
     },
@@ -1245,7 +1187,7 @@
         "type": "debug",
         "z": "8e8ef3d5174fe14f",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -1253,7 +1195,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 950,
-        "y": 900,
+        "y": 1120,
         "wires": []
     },
     {
@@ -1290,7 +1232,7 @@
         "to": "",
         "reg": false,
         "x": 390,
-        "y": 820,
+        "y": 1040,
         "wires": [
             [
                 "df6285cf2a828ae2"
@@ -1331,7 +1273,7 @@
         "to": "",
         "reg": false,
         "x": 390,
-        "y": 860,
+        "y": 1080,
         "wires": [
             [
                 "df6285cf2a828ae2"
@@ -1372,7 +1314,7 @@
         "to": "",
         "reg": false,
         "x": 390,
-        "y": 900,
+        "y": 1120,
         "wires": [
             [
                 "df6285cf2a828ae2"
@@ -1406,7 +1348,7 @@
         "animate": false,
         "className": "",
         "x": 290,
-        "y": 760,
+        "y": 980,
         "wires": [
             [
                 "18004d0c0fccb0a9"
@@ -1433,10 +1375,11 @@
         "to": "",
         "reg": false,
         "x": 470,
-        "y": 760,
+        "y": 980,
         "wires": [
             [
-                "f5615e66cb0460da"
+                "f5615e66cb0460da",
+                "5a15dfe2eeebf161"
             ]
         ]
     },
@@ -1447,7 +1390,7 @@
         "name": "",
         "events": "all",
         "x": 880,
-        "y": 760,
+        "y": 980,
         "wires": [
             []
         ]
@@ -1483,7 +1426,7 @@
         "to": "",
         "reg": false,
         "x": 690,
-        "y": 760,
+        "y": 980,
         "wires": [
             [
                 "fec8a98b59d2ba3c"
@@ -1508,7 +1451,7 @@
         "payload": "false",
         "payloadType": "bool",
         "x": 160,
-        "y": 760,
+        "y": 980,
         "wires": [
             [
                 "9d8ddc925c6e864e",
@@ -1535,8 +1478,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 470,
-        "y": 220,
+        "x": 370,
+        "y": 440,
         "wires": [
             [
                 "3db195648e789fae"
@@ -1557,7 +1500,7 @@
         "layout": "col-center",
         "className": "",
         "x": 500,
-        "y": 720,
+        "y": 940,
         "wires": []
     },
     {
@@ -1580,7 +1523,7 @@
         "to": "",
         "reg": false,
         "x": 330,
-        "y": 720,
+        "y": 940,
         "wires": [
             [
                 "f9d95b4205cf5b37"
@@ -1597,8 +1540,8 @@
                 "t": "set",
                 "p": "payload",
                 "pt": "msg",
-                "to": "led.state",
-                "tot": "global"
+                "to": "clock.on",
+                "tot": "msg"
             }
         ],
         "action": "",
@@ -1607,10 +1550,11 @@
         "to": "",
         "reg": false,
         "x": 290,
-        "y": 380,
+        "y": 180,
         "wires": [
             [
-                "75a844e9f2b68a2a"
+                "75a844e9f2b68a2a",
+                "72ef268e5575946e"
             ]
         ]
     },
@@ -1619,17 +1563,20 @@
         "type": "function",
         "z": "8e8ef3d5174fe14f",
         "name": "",
-        "func": "var red = msg.payload.r;\nvar green = msg.payload.g;\nvar blue = msg.payload.b;\nred = parseFloat(red/2.55).toFixed(1);\ngreen = parseFloat(green/2.55).toFixed(1);\nblue = parseFloat(blue/2.55).toFixed(1);\nmsg.payload =\"Red: \"+red+\"\\r\"+\" Green: \" +green+\"\\n\"+\" Blue: \"+blue;\nreturn msg;",
-        "outputs": 1,
+        "func": "let red = msg.payload.r;\nlet green = msg.payload.g;\nlet blue = msg.payload.b;\nred = parseFloat(red/2.55).toFixed(1);\ngreen = parseFloat(green/2.55).toFixed(1);\nblue = parseFloat(blue/2.55).toFixed(1);\nmsg.payload =\"Red: \"+red+\"\\r\"+\" Green: \" +green+\"\\n\"+\" Blue: \"+blue;\nreturn [msg,msg];",
+        "outputs": 2,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1320,
-        "y": 60,
+        "x": 1080,
+        "y": 280,
         "wires": [
             [
                 "5f5d222e2204309e"
+            ],
+            [
+                "2b0921775b278d3e"
             ]
         ]
     },
@@ -1639,10 +1586,10 @@
         "z": "8e8ef3d5174fe14f",
         "name": "colour picker update",
         "links": [
-            "6afbed6874c83a7d"
+            "8ac40af7f58a31b9"
         ],
-        "x": 355,
-        "y": 60,
+        "x": 145,
+        "y": 280,
         "wires": [
             [
                 "7654d3be746fe55d"
@@ -1666,22 +1613,22 @@
                 "t": "set",
                 "p": "payload.r",
                 "pt": "msg",
-                "to": "led.color.red",
-                "tot": "global"
+                "to": "clock.led.red",
+                "tot": "msg"
             },
             {
                 "t": "set",
                 "p": "payload.b",
                 "pt": "msg",
-                "to": "led.color.blue",
-                "tot": "global"
+                "to": "clock.led.blue",
+                "tot": "msg"
             },
             {
                 "t": "set",
                 "p": "payload.g",
                 "pt": "msg",
-                "to": "led.color.green",
-                "tot": "global"
+                "to": "clock.led.green",
+                "tot": "msg"
             }
         ],
         "action": "",
@@ -1689,95 +1636,160 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 490,
-        "y": 60,
+        "x": 310,
+        "y": 280,
         "wires": [
             [
-                "d891a26d5b862624"
+                "839479f18594896f"
             ]
         ]
     },
     {
-        "id": "2bf82859a82996a0",
-        "type": "debug",
+        "id": "2b0921775b278d3e",
+        "type": "link out",
         "z": "8e8ef3d5174fe14f",
         "name": "",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 950,
-        "y": 20,
-        "wires": []
-    },
-    {
-        "id": "d891a26d5b862624",
-        "type": "rbe",
-        "z": "8e8ef3d5174fe14f",
-        "name": "",
-        "func": "rbe",
-        "gap": "",
-        "start": "",
-        "inout": "out",
-        "septopics": true,
-        "property": "payload",
-        "topi": "topic",
-        "x": 690,
-        "y": 60,
-        "wires": [
-            [
-                "839479f18594896f",
-                "2bf82859a82996a0"
-            ]
-        ]
-    },
-    {
-        "id": "b25a6bfa04d7a1cd",
-        "type": "debug",
-        "z": "49a5b38cd69eaf97",
-        "name": "",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 750,
-        "y": 80,
-        "wires": []
-    },
-    {
-        "id": "5c24b4c1bcb23269",
-        "type": "inject",
-        "z": "49a5b38cd69eaf97",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
+        "mode": "link",
+        "links": [
+            "9e9392e174404df3"
         ],
-        "repeat": "1",
-        "crontab": "",
-        "once": true,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "start",
-        "payloadType": "str",
-        "x": 190,
-        "y": 180,
-        "wires": [
-            [
-                "919b5487618c190b"
-            ]
-        ]
+        "x": 1225,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "1e091c600aaddf85",
+        "type": "link out",
+        "z": "8e8ef3d5174fe14f",
+        "name": "",
+        "mode": "link",
+        "links": [],
+        "x": 835,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "4ac3280b03752e96",
+        "type": "link out",
+        "z": "8e8ef3d5174fe14f",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "9e9392e174404df3"
+        ],
+        "x": 845,
+        "y": 720,
+        "wires": []
+    },
+    {
+        "id": "e3eb72c24db848e2",
+        "type": "link out",
+        "z": "8e8ef3d5174fe14f",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "611fcfba31c64ef8",
+            "9e9392e174404df3"
+        ],
+        "x": 725,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "ddf6cb31a64ffe43",
+        "type": "debug",
+        "z": "8e8ef3d5174fe14f",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1010,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "50d902667d34c4dd",
+        "type": "debug",
+        "z": "8e8ef3d5174fe14f",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 710,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "e0df07993f95631d",
+        "type": "debug",
+        "z": "8e8ef3d5174fe14f",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 650,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "72ef268e5575946e",
+        "type": "debug",
+        "z": "8e8ef3d5174fe14f",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 490,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "5a15dfe2eeebf161",
+        "type": "debug",
+        "z": "8e8ef3d5174fe14f",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 670,
+        "y": 1020,
+        "wires": []
+    },
+    {
+        "id": "b8a2316ed2cded4e",
+        "type": "debug",
+        "z": "8e8ef3d5174fe14f",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 710,
+        "y": 1140,
+        "wires": []
     },
     {
         "id": "9e9392e174404df3",
@@ -1787,10 +1799,15 @@
         "links": [
             "9a823b7a5998551d",
             "70c8408bfb3fb860",
-            "af3145eff3460291"
+            "af3145eff3460291",
+            "2b0921775b278d3e",
+            "eada01be79364388",
+            "4ac3280b03752e96",
+            "e3eb72c24db848e2",
+            "c79fdec3bae320c8"
         ],
-        "x": 135,
-        "y": 240,
+        "x": 275,
+        "y": 180,
         "wires": [
             [
                 "919b5487618c190b"
@@ -1802,7 +1819,7 @@
         "type": "function",
         "z": "49a5b38cd69eaf97",
         "name": "get sys argv",
-        "func": "var now = new Date();\nvar brightness = global.get(\"led.brightness\");\nbrightness = (brightness*255)/100;\nvar red = global.get(\"led.color.red\");\nvar green = global.get(\"led.color.green\");\nvar blue = global.get(\"led.color.blue\");\nvar white = 0;\nvar onOff = global.get(\"led.state\");\nif (onOff == false){\n    red = 0;\n    green = 0;\n    blue = 0;\n    white = 0;\n}\nif (red == green) {\n    if (red == blue){\n    white = red;\n    red = 0;\n    green = 0;\n    blue = 0;\n    }\n}\nif (red===undefined){\n    red = 0;\n}\nif (blue===undefined){\n    blue = 0;\n}\nif (green===undefined){\n    green = 0;\n}\nif (white === undefined){\n    white = 0;\n}\nmsg = { payload: now.getHours()+\" \"+now.getMinutes()+\" \"+brightness+\" \"+red+\" \"+green+\" \"+blue+\" \"+white };\n\nreturn msg;",
+        "func": "let now = new Date();\nlet brightness = msg.clock.led.brightness;\nbrightness = (brightness*255)/100;\nlet red = msg.clock.led.red;\nlet green = msg.clock.led.green;\nlet blue = msg.clock.led.blue;\nlet white = 0;\nlet onOff = msg.clock.on;\nif (onOff == false){\n    red = 0;\n    green = 0;\n    blue = 0;\n    white = 0;\n}\nif (red == green) {\n    if (red == blue){\n    white = red;\n    red = 0;\n    green = 0;\n    blue = 0;\n    }\n}\nif (red===undefined){\n    red = 0;\n}\nif (blue===undefined){\n    blue = 0;\n}\nif (green===undefined){\n    green = 0;\n}\nif (white === undefined){\n    white = 0;\n}\nmsg = { payload: now.getHours()+\" \"+now.getMinutes()+\" \"+brightness+\" \"+red+\" \"+green+\" \"+blue+\" \"+white };\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -1828,13 +1845,11 @@
         "septopics": true,
         "property": "payload",
         "topi": "topic",
-        "x": 550,
+        "x": 570,
         "y": 180,
         "wires": [
             [
-                "b25a6bfa04d7a1cd",
-                "11e44372043f8a7e",
-                "6afbed6874c83a7d"
+                "11e44372043f8a7e"
             ]
         ]
     },
@@ -1856,12 +1871,8 @@
             [
                 "f39838e8531bcd88"
             ],
-            [
-                "f39838e8531bcd88"
-            ],
-            [
-                "f39838e8531bcd88"
-            ]
+            [],
+            []
         ]
     },
     {
@@ -1869,15 +1880,15 @@
         "type": "debug",
         "z": "49a5b38cd69eaf97",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1090,
-        "y": 160,
+        "x": 1150,
+        "y": 280,
         "wires": []
     },
     {
@@ -1917,9 +1928,7 @@
         "wires": [
             [],
             [],
-            [
-                "f39838e8531bcd88"
-            ]
+            []
         ]
     },
     {
@@ -2063,7 +2072,7 @@
         "type": "function",
         "z": "49a5b38cd69eaf97",
         "name": "check rules",
-        "func": "//check whether rule was already activated or stopped\nvar now = new Date();\nvar starttimeHours = global.get(\"rule1.start.hour\");\nvar startimeMin = global.get(\"rule1.start.min\");\nvar stoptimeHours = global.get(\"rule1.stop.hour\");\nvar stoptimeMin = global.get(\"rule1.stop.min\");\nvar brightness = global.get(\"led.brightness\");\nvar red = global.get(\"led.color.red\");\nvar green = global.get(\"led.color.green\");\nvar blue = global.get(\"led.color.blue\");\nvar rule1 = global.get(\"rule1\");\n\nif(rule1){\n    if(now.getHours() == starttimeHours){\n        if(now.getMinutes() == starttimeMin){\n            global.set(\"rule1.quicksave[0]\",brightness);\n            global.set(\"rule1.quicksave[1]\",red);\n            global.set(\"rule1.quicksave[2]\",green);\n            global.set(\"rule1.quicksave[3]\",blue);\n            var rule = global.get(\"rule1.rule\");\n            switch (rule){\n                case \"dimm 50%\":\n                    global.set(\"led.brightness\",brightness*0.5);\n                break;\n                case \"dimm 25%\":\n                    global.set(\"led.brightness\",brightness*0.25);\n                break;\n                case \"turn off\":\n                    global.set(\"led.state\",false);\n                break;\n                case \"turn red\":\n                    global.set(\"led.color.red\",255);\n                    global.set(\"led.color.green\",0);\n                    global.set(\"led.color.blue\",0);\n                break;\n            }\n            \n        }\n    }\n    if(now.getHours() == stoptimeHours){\n        if(now.getMinutes() == stoptimeMin){\n            brightness = global.get(rule1.quicksave[0]);\n            red = global.get(\"rule1.quicksave[1]\");\n            green = global.get(\"rule1.quicksave[2]\");\n            blue = global.get(\"rule1.quicksave[3]\");\n            global.set(\"led.brightness\",brightness);\n            global.set(\"led.color.red\",red);\n            global.set(\"led.color.green\",green);\n            global.set(\"led.color.blue\",blue);\n        }\n    }\n}\nreturn msg;",
+        "func": "//check whether rule was already activated or stopped\nlet now = new Date();\nlet starttimeHours = global.get(\"rule1.start.hour\");\nlet startimeMin = global.get(\"rule1.start.min\");\nlet stoptimeHours = global.get(\"rule1.stop.hour\");\nlet stoptimeMin = global.get(\"rule1.stop.min\");\nlet brightness = global.get(\"led.brightness\");\nlet red = global.get(\"led.color.red\");\nlet green = global.get(\"led.color.green\");\nlet blue = global.get(\"led.color.blue\");\nlet rule1 = global.get(\"rule1\");\n\nif(rule1){\n    if(now.getHours() == starttimeHours){\n        if(now.getMinutes() == starttimeMin){\n            global.set(\"rule1.quicksave[0]\",brightness);\n            global.set(\"rule1.quicksave[1]\",red);\n            global.set(\"rule1.quicksave[2]\",green);\n            global.set(\"rule1.quicksave[3]\",blue);\n            var rule = global.get(\"rule1.rule\");\n            switch (rule){\n                case \"dimm 50%\":\n                    global.set(\"led.brightness\",brightness*0.5);\n                break;\n                case \"dimm 25%\":\n                    global.set(\"led.brightness\",brightness*0.25);\n                break;\n                case \"turn off\":\n                    global.set(\"led.state\",false);\n                break;\n                case \"turn red\":\n                    global.set(\"led.color.red\",255);\n                    global.set(\"led.color.green\",0);\n                    global.set(\"led.color.blue\",0);\n                break;\n            }\n            \n        }\n    }\n    if(now.getHours() == stoptimeHours){\n        if(now.getMinutes() == stoptimeMin){\n            brightness = global.get(rule1.quicksave[0]);\n            red = global.get(\"rule1.quicksave[1]\");\n            green = global.get(\"rule1.quicksave[2]\");\n            blue = global.get(\"rule1.quicksave[3]\");\n            global.set(\"led.brightness\",brightness);\n            global.set(\"led.color.red\",red);\n            global.set(\"led.color.green\",green);\n            global.set(\"led.color.blue\",blue);\n        }\n    }\n}\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -2074,21 +2083,6 @@
         "wires": [
             []
         ]
-    },
-    {
-        "id": "6afbed6874c83a7d",
-        "type": "link out",
-        "z": "49a5b38cd69eaf97",
-        "name": "led output",
-        "mode": "link",
-        "links": [
-            "611fcfba31c64ef8",
-            "ade0db0f18e6f51a",
-            "c379171cbbd32634"
-        ],
-        "x": 685,
-        "y": 180,
-        "wires": []
     },
     {
         "id": "edf1335d9b56ddc2",
@@ -2210,6 +2204,9 @@
         "func": "var ip = msg.payload.match(/inet ([0-9\\.]+)/)[1]\nvar mask = msg.payload.match(/netmask ([0-9\\.]+)/)[1]\nvar broadcast = msg.payload.match(/broadcast ([0-9\\.]+)/)[1]\n\n\nnode.send({topic: 'ip', payload: ip})\nnode.send({topic: 'mask', payload: mask})\nnode.send({topic: 'broadcast', payload: broadcast})",
         "outputs": 1,
         "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
         "x": 640,
         "y": 168,
         "wires": [
@@ -2636,8 +2633,7 @@
         "y": 80,
         "wires": [
             [
-                "7dfcc71fed86bbb4",
-                "f120b1eb074e6f52"
+                "7dfcc71fed86bbb4"
             ]
         ]
     },
@@ -2983,7 +2979,7 @@
         "type": "function",
         "z": "a70220f36865d0c9",
         "name": "",
-        "func": "var hours = msg.payload[0];\nvar minutes = msg.payload[1];\nvar seconds = msg.payload[2];\nmsg.payload = hours + \":\" + minutes + \":\" + seconds\nreturn msg;",
+        "func": "const hours = msg.payload[0];\nconst minutes = msg.payload[1];\nconst seconds = msg.payload[2];\nmsg.payload = hours + \":\" + minutes + \":\" + seconds\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -3038,7 +3034,7 @@
         "type": "function",
         "z": "a70220f36865d0c9",
         "name": "get time",
-        "func": "var now = new Date();\nvar msg1 = { payload: now.getHours() };\nvar msg2 = { payload: now.getMinutes() };\nvar msg3 = { payload: now.getSeconds() };\nvar msg4 = { payload: msg1.payload+\":\"+msg2.payload+\":\"+msg3.payload };\n\nreturn [msg1,msg2,msg3,msg4];",
+        "func": "let now = new Date();\nconst msg1 = { payload: now.getHours() };\nconst msg2 = { payload: now.getMinutes() };\nconst msg3 = { payload: now.getSeconds() };\nconst msg4 = { payload: msg1.payload+\":\"+msg2.payload+\":\"+msg3.payload };\n\nreturn [msg1,msg2,msg3,msg4];",
         "outputs": 4,
         "noerr": 0,
         "initialize": "",
@@ -3305,7 +3301,7 @@
                 "vt": "str"
             }
         ],
-        "repeat": "10",
+        "repeat": "15",
         "crontab": "",
         "once": true,
         "onceDelay": "1",
@@ -3427,19 +3423,6 @@
         ]
     },
     {
-        "id": "f120b1eb074e6f52",
-        "type": "link out",
-        "z": "a70220f36865d0c9",
-        "name": "",
-        "mode": "link",
-        "links": [
-            "77218628325ac001"
-        ],
-        "x": 225,
-        "y": 120,
-        "wires": []
-    },
-    {
         "id": "77218628325ac001",
         "type": "link in",
         "z": "a70220f36865d0c9",
@@ -3449,8 +3432,8 @@
             "832e979c7f42a206",
             "2b775c2520582e7c"
         ],
-        "x": 195,
-        "y": 920,
+        "x": 185,
+        "y": 880,
         "wires": [
             [
                 "2258d8382e806b7a"
@@ -3506,7 +3489,7 @@
         "y": 400,
         "wires": [
             [
-                "832e979c7f42a206"
+                "6b8b1eaf53878a2b"
             ]
         ]
     },
@@ -3519,8 +3502,8 @@
         "links": [
             "77218628325ac001"
         ],
-        "x": 1005,
-        "y": 400,
+        "x": 1185,
+        "y": 420,
         "wires": []
     },
     {
@@ -3544,7 +3527,7 @@
         "y": 440,
         "wires": [
             [
-                "832e979c7f42a206"
+                "6b8b1eaf53878a2b"
             ]
         ]
     },
@@ -3671,7 +3654,7 @@
         "type": "function",
         "z": "a70220f36865d0c9",
         "name": "",
-        "func": "var online = global.get(\"online\");\nif (!online){\n    return msg;   \n}\n\n",
+        "func": "let online = global.get(\"online\");\nif (!online){\n    return msg;   \n}\n\n",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -3894,6 +3877,39 @@
         ]
     },
     {
+        "id": "f3e6c7d378b50e92",
+        "type": "ui_ui_control",
+        "z": "a70220f36865d0c9",
+        "name": "onTab",
+        "events": "all",
+        "x": 150,
+        "y": 920,
+        "wires": [
+            [
+                "2258d8382e806b7a"
+            ]
+        ]
+    },
+    {
+        "id": "6b8b1eaf53878a2b",
+        "type": "function",
+        "z": "a70220f36865d0c9",
+        "name": "cleanup",
+        "func": "msg = {};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1080,
+        "y": 420,
+        "wires": [
+            [
+                "832e979c7f42a206"
+            ]
+        ]
+    },
+    {
         "id": "ca105ab5370d125e",
         "type": "amazon-echo-hub",
         "z": "a5946ab9f5ba7434",
@@ -3918,8 +3934,8 @@
         "y": 240,
         "wires": [
             [
-                "08f533119f557d1d",
-                "97773266f254c209"
+                "97773266f254c209",
+                "08f533119f557d1d"
             ]
         ]
     },
@@ -3937,7 +3953,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 630,
-        "y": 280,
+        "y": 340,
         "wires": []
     },
     {
@@ -3945,91 +3961,155 @@
         "type": "function",
         "z": "a5946ab9f5ba7434",
         "name": "",
-        "func": "var brightness = msg.percentage;\nif (msg.on){\n    global.set(\"led.state\",true);\n} else {\n    global.set(\"led.state\",false);\n    brightness = 0;\n}\nglobal.set(\"led.brightness\",brightness);\nvar colormode = msg.colormode;\nif (colormode === \"hs\"){\n    var red = msg.rgb[0];\n    global.set(\"led.color.red\",red);\n    var green = msg.rgb[1];\n    global.set(\"led.color.green\",green);\n    var blue = msg.rgb[2];\n    global.set(\"led.color.blue\",blue);\n} else {\n    global.set(\"led.color.red\",254);\n    global.set(\"led.color.blue\",254);\n    global.set(\"led.color.green\",254);\n}\nmsg.payload = msg.on;\nreturn msg;",
+        "func": "let brightness = msg.percentage;\nlet state = msg.on;\nconst colormode = msg.colormode;\nconst red = msg.rgb[0];\nconst green = msg.rgb[1];\nconst blue = msg.rgb[2];\nmsg = {};//cleanup\n\n\nif (state){\n    msg['clock.on'] = true;\n} else {\n    msg['clock.on'] = false;\n}\n\nif (colormode === \"hs\"){\n    msg['clock.led.red'] = red;\n    msg['clock.led.green'] = green;\n    msg['clock.led.blue'] = blue;\n} else {\n    msg['clock.led.red'] = 254;\n    msg['clock.led.green'] = 254;\n    msg['clock.led.blue'] = 254;\n}\nmsg['clock.led.brightness'] = brightness;\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 640,
+        "x": 600,
         "y": 240,
         "wires": [
-            []
-        ]
-    },
-    {
-        "id": "bb6cb0ca2c7c3fcb",
-        "type": "delay",
-        "z": "4cca685967a3b05e",
-        "name": "",
-        "pauseType": "delay",
-        "timeout": "10",
-        "timeoutUnits": "seconds",
-        "rate": "1",
-        "nbRateUnits": "1",
-        "rateUnits": "second",
-        "randomFirst": "1",
-        "randomLast": "5",
-        "randomUnits": "seconds",
-        "drop": false,
-        "allowrate": false,
-        "outputs": 1,
-        "x": 410,
-        "y": 260,
-        "wires": [
             [
-                "368ba5fd1448a7c5"
+                "8ac40af7f58a31b9",
+                "08f533119f557d1d",
+                "c79fdec3bae320c8"
             ]
         ]
     },
     {
-        "id": "eb959ef8c4776bfd",
-        "type": "change",
+        "id": "8ac40af7f58a31b9",
+        "type": "link out",
+        "z": "a5946ab9f5ba7434",
+        "name": "ui_refresh",
+        "mode": "link",
+        "links": [
+            "611fcfba31c64ef8",
+            "ade0db0f18e6f51a",
+            "c379171cbbd32634"
+        ],
+        "x": 755,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "c79fdec3bae320c8",
+        "type": "link out",
+        "z": "a5946ab9f5ba7434",
+        "name": "",
+        "mode": "link",
+        "links": [
+            "9e9392e174404df3"
+        ],
+        "x": 755,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "11e2fef81805109e",
+        "type": "inject",
         "z": "4cca685967a3b05e",
         "name": "",
-        "rules": [
+        "props": [
             {
-                "t": "set",
-                "p": "enabled",
-                "pt": "msg",
-                "to": "false",
-                "tot": "bool"
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
             }
         ],
-        "action": "",
-        "property": "",
-        "from": "",
-        "to": "",
-        "reg": false,
-        "x": 410,
-        "y": 220,
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "sudo shutdown -h now",
+        "payloadType": "str",
+        "x": 320,
+        "y": 320,
         "wires": [
+            [
+                "a1dfac3cfb0b5db7"
+            ]
+        ]
+    },
+    {
+        "id": "a1dfac3cfb0b5db7",
+        "type": "exec",
+        "z": "4cca685967a3b05e",
+        "command": "",
+        "addpay": "payload",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 530,
+        "y": 320,
+        "wires": [
+            [],
+            [],
             []
         ]
     },
     {
-        "id": "368ba5fd1448a7c5",
-        "type": "change",
+        "id": "669d6ae46d0f1332",
+        "type": "inject",
         "z": "4cca685967a3b05e",
         "name": "",
-        "rules": [
+        "props": [
             {
-                "t": "set",
-                "p": "enabled",
-                "pt": "msg",
-                "to": "true",
-                "tot": "bool"
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
             }
         ],
-        "action": "",
-        "property": "",
-        "from": "",
-        "to": "",
-        "reg": false,
-        "x": 610,
-        "y": 260,
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "sudo reboot -h now",
+        "payloadType": "str",
+        "x": 310,
+        "y": 360,
         "wires": [
-            []
+            [
+                "a1dfac3cfb0b5db7"
+            ]
+        ]
+    },
+    {
+        "id": "c36bf14738590ebc",
+        "type": "inject",
+        "z": "4cca685967a3b05e",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "node-red-stop",
+        "payloadType": "str",
+        "x": 290,
+        "y": 400,
+        "wires": [
+            [
+                "a1dfac3cfb0b5db7"
+            ]
         ]
     }
 ]
