@@ -260,15 +260,6 @@
         "className": ""
     },
     {
-        "id": "281cc9b9ceb9edc4",
-        "type": "ui_group",
-        "name": "Group 4",
-        "tab": "881f81eaac918727",
-        "order": 4,
-        "disp": true,
-        "width": 6
-    },
-    {
         "id": "c93e4ec5cd117f31",
         "type": "ui_tab",
         "name": "Rules",
@@ -327,10 +318,10 @@
         "label": "Brightness",
         "tooltip": "",
         "group": "53b1b254d42f7c73",
-        "order": 3,
+        "order": 2,
         "width": 0,
         "height": 0,
-        "passthru": true,
+        "passthru": false,
         "outs": "end",
         "topic": "topic",
         "topicType": "msg",
@@ -338,12 +329,11 @@
         "max": "100",
         "step": 1,
         "className": "",
-        "x": 570,
-        "y": 400,
+        "x": 610,
+        "y": 540,
         "wires": [
             [
-                "6f6c50d024b1bcdd",
-                "50d902667d34c4dd"
+                "6f6c50d024b1bcdd"
             ]
         ]
     },
@@ -372,7 +362,7 @@
         "topicType": "msg",
         "className": "",
         "x": 650,
-        "y": 280,
+        "y": 420,
         "wires": [
             [
                 "2da745fb0e420a20"
@@ -387,10 +377,18 @@
         "rules": [
             {
                 "t": "set",
-                "p": "led.brightness",
-                "pt": "global",
+                "p": "clock.led.brightness",
+                "pt": "msg",
                 "to": "payload",
                 "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "clock.led.brightness",
+                "pt": "flow",
+                "to": "payload",
+                "tot": "msg",
+                "dc": true
             }
         ],
         "action": "",
@@ -398,11 +396,11 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 820,
-        "y": 400,
+        "x": 810,
+        "y": 540,
         "wires": [
             [
-                "2b0921775b278d3e"
+                "f8a2ccf56b15ad8f"
             ]
         ]
     },
@@ -432,6 +430,30 @@
                 "pt": "msg",
                 "to": "payload.g",
                 "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "clock.led.red",
+                "pt": "flow",
+                "to": "payload.r",
+                "tot": "msg",
+                "dc": true
+            },
+            {
+                "t": "set",
+                "p": "clock.led.blue",
+                "pt": "flow",
+                "to": "payload.b",
+                "tot": "msg",
+                "dc": true
+            },
+            {
+                "t": "set",
+                "p": "clock.led.green",
+                "pt": "flow",
+                "to": "payload.g",
+                "tot": "msg",
+                "dc": true
             }
         ],
         "action": "",
@@ -439,11 +461,11 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 890,
-        "y": 280,
+        "x": 830,
+        "y": 420,
         "wires": [
             [
-                "3a21398ecc07a28b"
+                "2b0921775b278d3e"
             ]
         ]
     },
@@ -507,8 +529,8 @@
         "topic": "topic",
         "topicType": "msg",
         "className": "",
-        "x": 650,
-        "y": 340,
+        "x": 310,
+        "y": 380,
         "wires": [
             [
                 "700252081ff28bcf"
@@ -520,37 +542,20 @@
         "type": "function",
         "z": "8e8ef3d5174fe14f",
         "name": "",
-        "func": "let str = msg.payload;\nlet values = str.split(',');\nmsg.payload = {\"r\":parseInt(values[0]),\"g\":parseInt(values[1]),\"b\":parseInt(values[2])}\n\nreturn msg;",
+        "func": "let str = msg.payload;\nlet values = str.split(',');\nmsg.payload = {};\nmsg.payload['r'] = parseInt(values[0],10);\nmsg.payload['g'] = parseInt(values[1],10);\nmsg.payload['b'] = parseInt(values[2],10);\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 820,
-        "y": 340,
+        "x": 480,
+        "y": 380,
         "wires": [
             [
-                "2da745fb0e420a20",
-                "ddf6cb31a64ffe43"
+                "839479f18594896f",
+                "2da745fb0e420a20"
             ]
         ]
-    },
-    {
-        "id": "5f5d222e2204309e",
-        "type": "ui_text",
-        "z": "8e8ef3d5174fe14f",
-        "group": "53b1b254d42f7c73",
-        "order": 2,
-        "width": 0,
-        "height": 0,
-        "name": "",
-        "label": "Current color",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "className": "",
-        "x": 1250,
-        "y": 260,
-        "wires": []
     },
     {
         "id": "611fcfba31c64ef8",
@@ -558,14 +563,15 @@
         "z": "8e8ef3d5174fe14f",
         "name": "brighnessInput",
         "links": [
-            "8ac40af7f58a31b9",
+            "2b0921775b278d3e",
             "e3eb72c24db848e2"
         ],
         "x": 145,
-        "y": 400,
+        "y": 560,
         "wires": [
             [
-                "960cd04cac5f31d9"
+                "cd94bde3dafe85f0",
+                "f8a2ccf56b15ad8f"
             ]
         ]
     },
@@ -596,11 +602,10 @@
         "animate": true,
         "className": "",
         "x": 480,
-        "y": 140,
+        "y": 260,
         "wires": [
             [
-                "3b48e7dade7c3e09",
-                "e0df07993f95631d"
+                "3b48e7dade7c3e09"
             ]
         ]
     },
@@ -616,6 +621,14 @@
                 "pt": "msg",
                 "to": "payload",
                 "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "clock.on",
+                "pt": "flow",
+                "to": "payload",
+                "tot": "msg",
+                "dc": true
             }
         ],
         "action": "",
@@ -624,46 +637,11 @@
         "to": "",
         "reg": false,
         "x": 670,
-        "y": 140,
+        "y": 260,
         "wires": [
             [
                 "9fad21d16172f3f0",
                 "1e091c600aaddf85"
-            ]
-        ]
-    },
-    {
-        "id": "a01a47ea7c00d94b",
-        "type": "inject",
-        "z": "8e8ef3d5174fe14f",
-        "name": "On start",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            },
-            {
-                "p": "clock.on",
-                "v": "true",
-                "vt": "bool"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": true,
-        "onceDelay": "0.5",
-        "topic": "ON",
-        "payload": "true",
-        "payloadType": "bool",
-        "x": 220,
-        "y": 60,
-        "wires": [
-            [
-                "4287d842f6fa4383",
-                "416aafec783e043d"
             ]
         ]
     },
@@ -673,6 +651,11 @@
         "z": "8e8ef3d5174fe14f",
         "name": "",
         "rules": [
+            {
+                "t": "delete",
+                "p": "clock",
+                "pt": "msg"
+            },
             {
                 "t": "change",
                 "p": "payload",
@@ -698,7 +681,7 @@
         "to": "",
         "reg": false,
         "x": 910,
-        "y": 120,
+        "y": 240,
         "wires": [
             [
                 "5a66c072cae8bb8b"
@@ -712,36 +695,9 @@
         "name": "",
         "events": "all",
         "x": 1100,
-        "y": 120,
+        "y": 240,
         "wires": [
             []
-        ]
-    },
-    {
-        "id": "416aafec783e043d",
-        "type": "change",
-        "z": "8e8ef3d5174fe14f",
-        "name": "",
-        "rules": [
-            {
-                "t": "set",
-                "p": "payload",
-                "pt": "msg",
-                "to": "255,255,255",
-                "tot": "str"
-            }
-        ],
-        "action": "",
-        "property": "",
-        "from": "",
-        "to": "",
-        "reg": false,
-        "x": 370,
-        "y": 360,
-        "wires": [
-            [
-                "0cab92e989ee80be"
-            ]
         ]
     },
     {
@@ -751,10 +707,11 @@
         "name": "on/off_switch",
         "links": [
             "4d0e5d595547de4b",
-            "8ac40af7f58a31b9"
+            "8ac40af7f58a31b9",
+            "90a417befd551f79"
         ],
         "x": 155,
-        "y": 180,
+        "y": 300,
         "wires": [
             [
                 "8c5d29b44156b117"
@@ -771,8 +728,13 @@
                 "t": "set",
                 "p": "payload",
                 "pt": "msg",
-                "to": "led.brightness",
-                "tot": "global"
+                "to": "clock.led.brightness",
+                "tot": "msg"
+            },
+            {
+                "t": "delete",
+                "p": "clock",
+                "pt": "msg"
             }
         ],
         "action": "",
@@ -780,8 +742,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 370,
-        "y": 400,
+        "x": 410,
+        "y": 540,
         "wires": [
             [
                 "3db195648e789fae"
@@ -878,14 +840,7 @@
         "rules": [
             {
                 "t": "set",
-                "p": "led.state",
-                "pt": "global",
-                "to": "true",
-                "tot": "bool"
-            },
-            {
-                "t": "set",
-                "p": "payload",
+                "p": "clock.on",
                 "pt": "msg",
                 "to": "true",
                 "tot": "bool"
@@ -900,8 +855,7 @@
         "y": 720,
         "wires": [
             [
-                "4d0e5d595547de4b",
-                "4ac3280b03752e96"
+                "4d0e5d595547de4b"
             ]
         ]
     },
@@ -913,14 +867,7 @@
         "rules": [
             {
                 "t": "set",
-                "p": "led.state",
-                "pt": "global",
-                "to": "false",
-                "tot": "bool"
-            },
-            {
-                "t": "set",
-                "p": "payload",
+                "p": "clock.on",
                 "pt": "msg",
                 "to": "false",
                 "tot": "bool"
@@ -935,8 +882,7 @@
         "y": 680,
         "wires": [
             [
-                "4d0e5d595547de4b",
-                "4ac3280b03752e96"
+                "4d0e5d595547de4b"
             ]
         ]
     },
@@ -950,7 +896,7 @@
             "ade0db0f18e6f51a"
         ],
         "x": 845,
-        "y": 680,
+        "y": 700,
         "wires": []
     },
     {
@@ -958,7 +904,7 @@
         "type": "function",
         "z": "8e8ef3d5174fe14f",
         "name": "",
-        "func": "let brightness = global.get(\"led.brightness\");\n\nif(msg.payload == 1){\n    global.set(\"loop\",true);\n    msg.payload = 2;\n    return msg;\n} else if (msg.payload == 2){\n    loop = global.get(\"loop\");\n    if (loop){\n        brightness = brightness-5;\n        if (brightness<=5){\n            brightness = 100;\n        }\n    global.set(\"led.brightness\",brightness)\n    return msg;\n    }\n} else if (msg.payload == 0){\n    global.set(\"loop\",false);\n}\n\n",
+        "func": "let brightness = flow.get(\"clock.led.brightness\") || 0;\n\nif(msg.payload == 1){\n    context.set(\"loop\",true);\n    msg.payload = 2;\n    return msg;\n} else if (msg.payload == 2){\n    loop = context.get(\"loop\");\n    if (loop){\n        brightness = brightness-5;\n        if (brightness<=5){\n            brightness = 100;\n        }\n    msg['clock.led.brightness'] = brightness;\n    return msg;\n    }\n} else if (msg.payload == 0){\n    context.set(\"loop\",false);\n}\n\n",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -1460,33 +1406,6 @@
         ]
     },
     {
-        "id": "4287d842f6fa4383",
-        "type": "change",
-        "z": "8e8ef3d5174fe14f",
-        "name": "",
-        "rules": [
-            {
-                "t": "set",
-                "p": "payload",
-                "pt": "msg",
-                "to": "100",
-                "tot": "num"
-            }
-        ],
-        "action": "",
-        "property": "",
-        "from": "",
-        "to": "",
-        "reg": false,
-        "x": 370,
-        "y": 440,
-        "wires": [
-            [
-                "3db195648e789fae"
-            ]
-        ]
-    },
-    {
         "id": "f9d95b4205cf5b37",
         "type": "ui_text",
         "z": "8e8ef3d5174fe14f",
@@ -1542,6 +1461,38 @@
                 "pt": "msg",
                 "to": "clock.on",
                 "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "clock.led.red",
+                "pt": "flow",
+                "to": "clock.led.red",
+                "tot": "msg",
+                "dc": true
+            },
+            {
+                "t": "set",
+                "p": "clock.led.green",
+                "pt": "flow",
+                "to": "clock.led.green",
+                "tot": "msg",
+                "dc": true
+            },
+            {
+                "t": "set",
+                "p": "clock.led.blue",
+                "pt": "flow",
+                "to": "clock.led.blue",
+                "tot": "msg",
+                "dc": true
+            },
+            {
+                "t": "set",
+                "p": "clock.led.brightness",
+                "pt": "flow",
+                "to": "clock.led.brightness",
+                "tot": "msg",
+                "dc": true
             }
         ],
         "action": "",
@@ -1550,33 +1501,10 @@
         "to": "",
         "reg": false,
         "x": 290,
-        "y": 180,
+        "y": 300,
         "wires": [
             [
-                "75a844e9f2b68a2a",
-                "72ef268e5575946e"
-            ]
-        ]
-    },
-    {
-        "id": "3a21398ecc07a28b",
-        "type": "function",
-        "z": "8e8ef3d5174fe14f",
-        "name": "",
-        "func": "let red = msg.payload.r;\nlet green = msg.payload.g;\nlet blue = msg.payload.b;\nred = parseFloat(red/2.55).toFixed(1);\ngreen = parseFloat(green/2.55).toFixed(1);\nblue = parseFloat(blue/2.55).toFixed(1);\nmsg.payload =\"Red: \"+red+\"\\r\"+\" Green: \" +green+\"\\n\"+\" Blue: \"+blue;\nreturn [msg,msg];",
-        "outputs": 2,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1080,
-        "y": 280,
-        "wires": [
-            [
-                "5f5d222e2204309e"
-            ],
-            [
-                "2b0921775b278d3e"
+                "75a844e9f2b68a2a"
             ]
         ]
     },
@@ -1586,13 +1514,14 @@
         "z": "8e8ef3d5174fe14f",
         "name": "colour picker update",
         "links": [
-            "8ac40af7f58a31b9"
+            "1e091c600aaddf85"
         ],
         "x": 145,
-        "y": 280,
+        "y": 440,
         "wires": [
             [
-                "7654d3be746fe55d"
+                "4e0fe377e8edccbd",
+                "2b0921775b278d3e"
             ]
         ]
     },
@@ -1636,8 +1565,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 310,
-        "y": 280,
+        "x": 450,
+        "y": 420,
         "wires": [
             [
                 "839479f18594896f"
@@ -1645,40 +1574,16 @@
         ]
     },
     {
-        "id": "2b0921775b278d3e",
-        "type": "link out",
-        "z": "8e8ef3d5174fe14f",
-        "name": "",
-        "mode": "link",
-        "links": [
-            "9e9392e174404df3"
-        ],
-        "x": 1225,
-        "y": 360,
-        "wires": []
-    },
-    {
         "id": "1e091c600aaddf85",
         "type": "link out",
         "z": "8e8ef3d5174fe14f",
-        "name": "",
-        "mode": "link",
-        "links": [],
-        "x": 835,
-        "y": 160,
-        "wires": []
-    },
-    {
-        "id": "4ac3280b03752e96",
-        "type": "link out",
-        "z": "8e8ef3d5174fe14f",
-        "name": "",
+        "name": "ui_on/off_out",
         "mode": "link",
         "links": [
-            "9e9392e174404df3"
+            "c379171cbbd32634"
         ],
-        "x": 845,
-        "y": 720,
+        "x": 835,
+        "y": 280,
         "wires": []
     },
     {
@@ -1688,75 +1593,10 @@
         "name": "",
         "mode": "link",
         "links": [
-            "611fcfba31c64ef8",
-            "9e9392e174404df3"
+            "611fcfba31c64ef8"
         ],
         "x": 725,
         "y": 800,
-        "wires": []
-    },
-    {
-        "id": "ddf6cb31a64ffe43",
-        "type": "debug",
-        "z": "8e8ef3d5174fe14f",
-        "name": "",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1010,
-        "y": 340,
-        "wires": []
-    },
-    {
-        "id": "50d902667d34c4dd",
-        "type": "debug",
-        "z": "8e8ef3d5174fe14f",
-        "name": "",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 710,
-        "y": 460,
-        "wires": []
-    },
-    {
-        "id": "e0df07993f95631d",
-        "type": "debug",
-        "z": "8e8ef3d5174fe14f",
-        "name": "",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 650,
-        "y": 100,
-        "wires": []
-    },
-    {
-        "id": "72ef268e5575946e",
-        "type": "debug",
-        "z": "8e8ef3d5174fe14f",
-        "name": "",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 490,
-        "y": 200,
         "wires": []
     },
     {
@@ -1792,19 +1632,298 @@
         "wires": []
     },
     {
+        "id": "47a2a8271fc0cfce",
+        "type": "inject",
+        "z": "8e8ef3d5174fe14f",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "3",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 210,
+        "y": 60,
+        "wires": [
+            [
+                "00db8d8250920c39"
+            ]
+        ]
+    },
+    {
+        "id": "00db8d8250920c39",
+        "type": "function",
+        "z": "8e8ef3d5174fe14f",
+        "name": "",
+        "func": "if (!msg.hasOwnProperty(\"clock\")){\n  msg.clock = {};\n}\nif (!msg.clock.hasOwnProperty(\"on\")){\n  msg.clock['on'] = flow.get('clock.on');\n}\nif (!msg.clock.hasOwnProperty(\"led\")){\n  msg.clock.led = {};\n}\nif (!msg.clock.led.hasOwnProperty(\"red\")){\n  msg.clock.led['red'] = flow.get('clock.led.red');\n}\nif (!msg.clock.led.hasOwnProperty(\"green\")){\n  msg.clock.led['green'] = flow.get('clock.led.green');\n}\nif (!msg.clock.led.hasOwnProperty(\"blue\")){\n  msg.clock.led['blue'] = flow.get('clock.led.blue');\n}\nif (!msg.clock.led.hasOwnProperty(\"brightness\")){\n  msg.clock.led['brightness'] = flow.get('clock.led.brightness');\n}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 80,
+        "wires": [
+            [
+                "7ea42b0b96cf62ff",
+                "60af5ea964adbb7e"
+            ]
+        ]
+    },
+    {
+        "id": "2b0921775b278d3e",
+        "type": "link out",
+        "z": "8e8ef3d5174fe14f",
+        "name": "ui_colour_out",
+        "mode": "link",
+        "links": [
+            "611fcfba31c64ef8"
+        ],
+        "x": 975,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "f8a2ccf56b15ad8f",
+        "type": "link out",
+        "z": "8e8ef3d5174fe14f",
+        "name": "ui_brightness_out",
+        "mode": "link",
+        "links": [
+            "97e9228683611f65"
+        ],
+        "x": 975,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "7da913299abdb736",
+        "type": "inject",
+        "z": "8e8ef3d5174fe14f",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "0.5",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 210,
+        "y": 180,
+        "wires": [
+            [
+                "a71036bc960b107c"
+            ]
+        ]
+    },
+    {
+        "id": "a71036bc960b107c",
+        "type": "change",
+        "z": "8e8ef3d5174fe14f",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "clock.led.red",
+                "pt": "msg",
+                "to": "255",
+                "tot": "num"
+            },
+            {
+                "t": "set",
+                "p": "clock.led.green",
+                "pt": "msg",
+                "to": "255",
+                "tot": "num"
+            },
+            {
+                "t": "set",
+                "p": "clock.led.blue",
+                "pt": "msg",
+                "to": "255",
+                "tot": "num"
+            },
+            {
+                "t": "set",
+                "p": "clock.led.brightness",
+                "pt": "msg",
+                "to": "100",
+                "tot": "num"
+            },
+            {
+                "t": "set",
+                "p": "clock.on",
+                "pt": "msg",
+                "to": "true",
+                "tot": "bool"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 390,
+        "y": 180,
+        "wires": [
+            [
+                "90a417befd551f79"
+            ]
+        ]
+    },
+    {
+        "id": "90a417befd551f79",
+        "type": "link out",
+        "z": "8e8ef3d5174fe14f",
+        "name": "ui_on_start_out",
+        "mode": "link",
+        "links": [
+            "ade0db0f18e6f51a"
+        ],
+        "x": 525,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "97e9228683611f65",
+        "type": "link in",
+        "z": "8e8ef3d5174fe14f",
+        "name": "ui_update_in",
+        "links": [
+            "f8a2ccf56b15ad8f"
+        ],
+        "x": 265,
+        "y": 100,
+        "wires": [
+            [
+                "00db8d8250920c39"
+            ]
+        ]
+    },
+    {
+        "id": "7ea42b0b96cf62ff",
+        "type": "link out",
+        "z": "8e8ef3d5174fe14f",
+        "name": "ui_update_out",
+        "mode": "link",
+        "links": [
+            "9e9392e174404df3"
+        ],
+        "x": 605,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "60af5ea964adbb7e",
+        "type": "debug",
+        "z": "8e8ef3d5174fe14f",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 670,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "4e0fe377e8edccbd",
+        "type": "switch",
+        "z": "8e8ef3d5174fe14f",
+        "name": "",
+        "property": "clock",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "hask",
+                "v": "led",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 250,
+        "y": 420,
+        "wires": [
+            [
+                "7654d3be746fe55d"
+            ]
+        ]
+    },
+    {
+        "id": "cd94bde3dafe85f0",
+        "type": "switch",
+        "z": "8e8ef3d5174fe14f",
+        "name": "",
+        "property": "clock.led",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "hask",
+                "v": "brightness",
+                "vt": "str"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 1,
+        "x": 250,
+        "y": 540,
+        "wires": [
+            [
+                "960cd04cac5f31d9",
+                "4e0655ef01e9f9cc"
+            ]
+        ]
+    },
+    {
+        "id": "4e0655ef01e9f9cc",
+        "type": "debug",
+        "z": "8e8ef3d5174fe14f",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 410,
+        "y": 480,
+        "wires": []
+    },
+    {
         "id": "9e9392e174404df3",
         "type": "link in",
         "z": "49a5b38cd69eaf97",
         "name": "clock refresh",
         "links": [
-            "9a823b7a5998551d",
-            "70c8408bfb3fb860",
-            "af3145eff3460291",
-            "2b0921775b278d3e",
-            "eada01be79364388",
-            "4ac3280b03752e96",
-            "e3eb72c24db848e2",
-            "c79fdec3bae320c8"
+            "7ea42b0b96cf62ff"
         ],
         "x": 275,
         "y": 180,
@@ -2442,7 +2561,7 @@
         "z": "a70220f36865d0c9",
         "name": "",
         "group": "4d0f060d.dee7e8",
-        "order": 1,
+        "order": 2,
         "width": 0,
         "height": 0,
         "passthru": false,
@@ -2473,7 +2592,7 @@
         "tooltip": "",
         "place": "Select a WIFI",
         "group": "4d0f060d.dee7e8",
-        "order": 2,
+        "order": 1,
         "width": 0,
         "height": 0,
         "passthru": false,
@@ -3062,8 +3181,8 @@
         "type": "ui_button",
         "z": "a70220f36865d0c9",
         "name": "",
-        "group": "4d0f060d.dee7e8",
-        "order": 4,
+        "group": "164170ab9447d34f",
+        "order": 2,
         "width": 0,
         "height": 0,
         "passthru": false,
@@ -3113,7 +3232,7 @@
         "type": "ui_text",
         "z": "a70220f36865d0c9",
         "group": "164170ab9447d34f",
-        "order": 2,
+        "order": 1,
         "width": 0,
         "height": 0,
         "name": "",
@@ -3944,7 +4063,7 @@
         "type": "debug",
         "z": "a5946ab9f5ba7434",
         "name": "",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -3961,7 +4080,7 @@
         "type": "function",
         "z": "a5946ab9f5ba7434",
         "name": "",
-        "func": "let brightness = msg.percentage;\nlet state = msg.on;\nconst colormode = msg.colormode;\nconst red = msg.rgb[0];\nconst green = msg.rgb[1];\nconst blue = msg.rgb[2];\nmsg = {};//cleanup\n\n\nif (state){\n    msg['clock.on'] = true;\n} else {\n    msg['clock.on'] = false;\n}\n\nif (colormode === \"hs\"){\n    msg['clock.led.red'] = red;\n    msg['clock.led.green'] = green;\n    msg['clock.led.blue'] = blue;\n} else {\n    msg['clock.led.red'] = 254;\n    msg['clock.led.green'] = 254;\n    msg['clock.led.blue'] = 254;\n}\nmsg['clock.led.brightness'] = brightness;\nreturn msg;",
+        "func": "let brightness = msg.percentage;\nlet state = msg.on;\nconst colormode = msg.colormode;\nconst red = msg.rgb[0];\nconst green = msg.rgb[1];\nconst blue = msg.rgb[2];\nmsg = {};//cleanup\nmsg.clock = {};\nmsg.clock.led = {};\n\nif (state){\n    msg.clock['on'] = true;\n} else {\n    msg.clock['on'] = false;\n}\n\nif (colormode === \"hs\"){\n    msg.clock.led['red'] = red;\n    msg.clock.led['green'] = green;\n    msg.clock.led['blue'] = blue;\n} else {\n    msg.clock.led['red'] = 254;\n    msg.clock.led['green'] = 254;\n    msg.clock.led['blue'] = 254;\n}\nmsg.clock.led['brightness'] = brightness;\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -3972,8 +4091,7 @@
         "wires": [
             [
                 "8ac40af7f58a31b9",
-                "08f533119f557d1d",
-                "c79fdec3bae320c8"
+                "08f533119f557d1d"
             ]
         ]
     },
@@ -3984,22 +4102,7 @@
         "name": "ui_refresh",
         "mode": "link",
         "links": [
-            "611fcfba31c64ef8",
-            "ade0db0f18e6f51a",
-            "c379171cbbd32634"
-        ],
-        "x": 755,
-        "y": 280,
-        "wires": []
-    },
-    {
-        "id": "c79fdec3bae320c8",
-        "type": "link out",
-        "z": "a5946ab9f5ba7434",
-        "name": "",
-        "mode": "link",
-        "links": [
-            "9e9392e174404df3"
+            "ade0db0f18e6f51a"
         ],
         "x": 755,
         "y": 240,
