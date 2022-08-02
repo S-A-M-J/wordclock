@@ -13,22 +13,69 @@ sudo apt-get install $PACKAGES -y
 sudo apt-get install scons
 sudo pip install rpi_ws281x
 sudo systemctl enable nodered.service
-sudo rm /etc/ssh/ssh_host_*
-sudo dpkg-reconfigure openssh-server
-sudo service ssh restart
-sudo apt-get install nginx #web server for port forwarding of node-red
-sudo rm /etc/nginx/sites-enabled/default
-sudo cd /etc/nginx/sites-available
-touch node
-sed -i "server {listen 80;
-	server_name wordclock.de;
-		location /ui {
-		proxy_set_header X-Forwarded-For $remote_addr;
-		proxy_set_header Host $http_host;
-		proxy_pass "http://127.0.0.1:1880";
-		}
-	}" node
-sudo ln -s /etc/nginx/sites-available/node /etc/nginx/sites-enabled/node
-sudo cd 
+sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-port 8090
+
+# disable debian networking and dhcpcd
+sudo -Es
+systemctl mask networking.service dhcpcd.service
+sudo mv /etc/network/interfaces /etc/network/interfaces~
+sed -i '1i resolvconf=NO' /etc/resolvconf.conf
+
+#setup wlan0
+cat >/etc/wpa_supplicant/wpa_supplicant-wlan0.conf <<EOF
+country=DE
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+
+network={
+    ssid="TestNet"
+    psk="verySecretPwassword"
+}
+EOF
+chmod 600 /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
+systemctl disable wpa_supplicant.service
+systemctl enable wpa_supplicant@wlan0.service
+
+#setup ap0
+cat > /etc/wpa_supplicant/wpa_supplicant-ap0.conf <<EOF
+country=DE
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+
+network={
+    ssid="RPiNet"
+    mode=2
+    key_mgmt=WPA-PSK
+    proto=RSN WPA
+    psk="anotherPassword"
+    frequency=2412
+}
+EOF
+
+chmod 600 /etc/wpa_supplicant/wpa_supplicant-ap0.conf
+
+cat > /etc/systemd/network/08-wlan0.network <<EOF
+[Match]
+Name=wlan0
+[Network]
+DHCP=yes
+EOF
+
+cat > /etc/systemd/network/12-ap0.network <<EOF
+[Match]
+Name=ap0
+[Network]
+Address=192.168.4.1/24
+DHCPServer=yes
+[DHCPServer]
+DNS=84.200.69.80 1.1.1.1
+EOF
+
+systemctl disable wpa_supplicant@ap0.service
+systemctl edit --full wpa_supplicant@ap0.service
+
+
+
 sudo reboot
+node-red-pi --max-old-space-size=128
 # still needs wifi access point setup and debugging
