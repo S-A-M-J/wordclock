@@ -1,0 +1,15 @@
+
+#!/bin/bash
+#wordclock update python files script
+echo "Updating python files from github..."
+
+echo "deleting old file"
+rm wordclock.py
+
+echo "downloading new file..."
+
+cd
+curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/wordclock.py >wordclock.py 
+
+cd
+
