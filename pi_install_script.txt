@@ -24,7 +24,7 @@ sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-port 898
 
 echo "downloading python file..."
 cd
-curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/wordclock_test.py >wordclock.py 
+curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/wordclock.py >wordclock.py 
 
 
 echo "downloading flow file..."
@@ -36,8 +36,9 @@ curl \-H 'Authorization: Bearer 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' \-H 'A
 touch flows.json
 mv flows.json ~/.node-red/flows.json
 
+cd
 
-echo"creating hotspot and wlan services"
+echo "creating hotspot and wlan services"
 # disable debian networking and dhcpcd
 sudo -Es
 systemctl mask networking.service dhcpcd.service
@@ -127,12 +128,8 @@ EOF"
 
 sudo systemctl daemon-reload
 
-
 sudo systemctl enable wpa_supplicant@ap0.service
 sudo systemctl disable wpa_supplicant@wlan0.service
-
-echo "changing hostname..."
-sudo hostname -b wordclock
 
 echo "rebooting so set changes..."
 sudo reboot
