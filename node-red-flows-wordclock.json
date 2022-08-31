@@ -2121,185 +2121,6 @@
         ]
     },
     {
-        "id": "8222ca1bde20e7c0",
-        "type": "gc",
-        "z": "8851576bb1816dd1",
-        "minor": true,
-        "major": true,
-        "incremental": true,
-        "weak": true,
-        "all": true,
-        "name": "",
-        "x": 190,
-        "y": 620,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "d4273bb3.2956f8",
-        "type": "gc",
-        "z": "8851576bb1816dd1",
-        "minor": true,
-        "major": true,
-        "incremental": true,
-        "weak": true,
-        "all": true,
-        "name": "",
-        "x": 744,
-        "y": 48.14453125,
-        "wires": [
-            [
-                "c79dbd16.6f388",
-                "3fbf50655235cd4a",
-                "688346b5998f9ce0"
-            ]
-        ]
-    },
-    {
-        "id": "c79dbd16.6f388",
-        "type": "function",
-        "z": "8851576bb1816dd1",
-        "name": "Get heap size freed by GC",
-        "func": "function sendWithDelay(message) {\n    node.send(message);\n}\n\n// Pass the totHeapSize difference (i.e. the amount of heap size that has been freed by the GC) and the topic to the output.\n// To get a pulse, make the signal 0 (300 msecs) before and (300 msecs) after the real value.\nsetTimeout(sendWithDelay, 0, {payload:0, topic:msg.topic});\nsetTimeout(sendWithDelay, 300, {payload:Math.abs(msg.payload.diff.usedHeapSize), topic:msg.topic});\nsetTimeout(sendWithDelay, 600, {payload:0, topic:msg.topic});\n",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 960,
-        "y": 40,
-        "wires": [
-            [
-                "f744096.dfe3af8"
-            ]
-        ]
-    },
-    {
-        "id": "f744096.dfe3af8",
-        "type": "ui_chart",
-        "z": "8851576bb1816dd1",
-        "name": "Heap freed graph",
-        "group": "1a7f6b0.0560695",
-        "order": 1,
-        "width": 0,
-        "height": 0,
-        "label": "Garbage collections",
-        "chartType": "line",
-        "legend": "true",
-        "xformat": "HH:mm:ss",
-        "interpolate": "linear",
-        "nodata": "Garbage collections",
-        "dot": false,
-        "ymin": "0",
-        "ymax": "2048000",
-        "removeOlder": "7",
-        "removeOlderPoints": "",
-        "removeOlderUnit": "86400",
-        "cutout": 0,
-        "useOneColor": false,
-        "useUTC": false,
-        "colors": [
-            "#1f77b4",
-            "#aec7e8",
-            "#ff7f0e",
-            "#2ca02c",
-            "#98df8a",
-            "#d62728",
-            "#ff9896",
-            "#9467bd",
-            "#c5b0d5"
-        ],
-        "outputs": 1,
-        "useDifferentColor": false,
-        "className": "",
-        "x": 1229.36328125,
-        "y": 48.25,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "688346b5998f9ce0",
-        "type": "debug",
-        "z": "8851576bb1816dd1",
-        "name": "debug 1",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1180,
-        "y": 160,
-        "wires": []
-    },
-    {
-        "id": "a2cb47ce4be77dca",
-        "type": "ui_chart",
-        "z": "8851576bb1816dd1",
-        "name": "Heap used graph",
-        "group": "1a7f6b0.0560695",
-        "order": 2,
-        "width": 0,
-        "height": 0,
-        "label": "heap used",
-        "chartType": "line",
-        "legend": "true",
-        "xformat": "HH:mm:ss",
-        "interpolate": "linear",
-        "nodata": "heap used",
-        "dot": false,
-        "ymin": "25000000",
-        "ymax": "55000000",
-        "removeOlder": "7",
-        "removeOlderPoints": "",
-        "removeOlderUnit": "86400",
-        "cutout": 0,
-        "useOneColor": false,
-        "useUTC": false,
-        "colors": [
-            "#1f77b4",
-            "#f9aa01",
-            "#1fff0f",
-            "#2ca02c",
-            "#98df8a",
-            "#d62728",
-            "#ff9896",
-            "#9467bd",
-            "#c5b0d5"
-        ],
-        "outputs": 1,
-        "useDifferentColor": false,
-        "className": "",
-        "x": 1230,
-        "y": 100,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "3fbf50655235cd4a",
-        "type": "function",
-        "z": "8851576bb1816dd1",
-        "name": "Get heap size freed by GC",
-        "func": "function sendWithDelay(message) {\n    node.send(message);\n}\n\nsendWithDelay({payload:msg.payload.after.usedHeapSize, topic:\"used heap size\"});\nsendWithDelay({payload: msg.payload.after.totalPhysicalSize, topic: \"tot physical heap size\" });\nsendWithDelay({ payload: msg.payload.after.totalHeapSize, topic: \"total heap size\" });",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 960,
-        "y": 100,
-        "wires": [
-            [
-                "a2cb47ce4be77dca"
-            ]
-        ]
-    },
-    {
         "id": "7e72ecf906ffa0f6",
         "type": "link in",
         "z": "d5e37a252238f604",
@@ -2358,7 +2179,7 @@
         "id": "57d94bd5f9422b31",
         "type": "exec",
         "z": "d5e37a252238f604",
-        "command": "sudo python ~/test.py ",
+        "command": "sudo python ~/wordclock.py",
         "addpay": "payload",
         "append": "",
         "useSpawn": "false",
@@ -2366,7 +2187,7 @@
         "winHide": false,
         "oldrc": false,
         "name": "",
-        "x": 780,
+        "x": 800,
         "y": 260,
         "wires": [
             [
@@ -2415,55 +2236,6 @@
             [],
             [],
             []
-        ]
-    },
-    {
-        "id": "d50d7f6b1a93b7ba",
-        "type": "exec",
-        "z": "d5e37a252238f604",
-        "command": "sudo python ~/test2.py ",
-        "addpay": "payload",
-        "append": "",
-        "useSpawn": "false",
-        "timer": "",
-        "winHide": false,
-        "oldrc": false,
-        "name": "",
-        "x": 780,
-        "y": 340,
-        "wires": [
-            [],
-            [],
-            []
-        ]
-    },
-    {
-        "id": "09f1e961e782469a",
-        "type": "inject",
-        "z": "d5e37a252238f604",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "16 12 255 255 0 0 0",
-        "payloadType": "str",
-        "x": 470,
-        "y": 320,
-        "wires": [
-            [
-                "d50d7f6b1a93b7ba"
-            ]
         ]
     },
     {
@@ -2584,8 +2356,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 230,
-        "y": 380,
+        "x": 310,
+        "y": 360,
         "wires": [
             []
         ]
@@ -4572,47 +4344,6 @@
             [
                 "99f333c478e5de3e"
             ]
-        ]
-    },
-    {
-        "id": "b906c04806a8fc6d",
-        "type": "inject",
-        "z": "5d6351a2fda5578f",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 260,
-        "y": 260,
-        "wires": [
-            [
-                "e9f79e385229a405"
-            ]
-        ]
-    },
-    {
-        "id": "e9f79e385229a405",
-        "type": "gc-trigger",
-        "z": "5d6351a2fda5578f",
-        "display": true,
-        "name": "",
-        "x": 450,
-        "y": 260,
-        "wires": [
-            []
         ]
     }
 ]
