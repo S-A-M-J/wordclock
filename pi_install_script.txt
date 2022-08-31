@@ -1,26 +1,40 @@
+
+#!/bin/bash
+#wordclock install script
+echo "Running raspi wordclock config script..."
+echo "updating packages..."
 sudo apt-get update && sudo apt-get upgrade -y
-sudo hostname -b wordclock
-bash <(curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered)
+echo "installing node-red..."
+curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered >tmp.sh
+bash tmp.sh
+rm tmp.sh
 cd $HOME/.node-red
+echo "installing node red nodes..."
 npm i node-red-dashboard
 npm install node-red-contrib-amazon-echo
+sudo systemctl enable nodered.service
 cd
-sudo apt-get install hostapd && sudo apt-get install dnsmasq
-sudo systemctl stop hostapd
-sudo systemctl stop dnsmasq
+echo "installing packages..."
 PACKAGES="python3-pip"
 sudo apt-get install $PACKAGES -y
 sudo apt-get install scons
 sudo pip install rpi_ws281x
-sudo systemctl enable nodered.service
-sudo apt-get install iptables-persistent
+sudo apt-get install iptables-persistent -y
 sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-port 8980
 
+echo"downloading python file..."
+curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered >wordclock.py
+
+echo"creating hotspot and wlan services"
 # disable debian networking and dhcpcd
 sudo -Es
 systemctl mask networking.service dhcpcd.service
 sudo mv /etc/network/interfaces /etc/network/interfaces~
 sed -i '1i resolvconf=NO' /etc/resolvconf.conf
+
+# enable systemd-networkd
+systemctl enable systemd-networkd.service systemd-resolved.service
+ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 
 #setup wlan0
 cat >/etc/wpa_supplicant/wpa_supplicant-wlan0.conf <<EOF
@@ -29,8 +43,8 @@ ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
 
 network={
-    ssid="TestNet"
-    psk="verySecretPwassword"
+    ssid="wordclockNet"
+    psk="wordclock"
 }
 EOF
 chmod 600 /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
@@ -72,11 +86,41 @@ DHCPServer=yes
 DNS=84.200.69.80 1.1.1.1
 EOF
 
-systemctl disable wpa_supplicant@ap0.service
-systemctl edit --full wpa_supplicant@ap0.service
+sudo systemctl disable wpa_supplicant@ap0.service
+#sudo systemctl edit --full wpa_supplicant@ap0.service
+
+# insert modification of file 
+sudo mkdir -p /etc/systemd/system/wpa_supplicant@ap0.service.d/
+sudo sh -c "cat > /etc/systemd/system/wpa_supplicant@ap0.service.d/override.conf <<EOF
+[Unit]
+Description=WPA supplicant daemon (interface-specific version)
+Requires=sys-subsystem-net-devices-wlan0.device
+After=sys-subsystem-net-devices-wlan0.device
+Conflicts=wpa_supplicant@wlan0.service
+Before=network.target
+Wants=network.target
+
+# NetworkManager users will probably want the dbus version instead.
+
+[Service]
+Type=simple
+ExecStartPre=/sbin/iw dev wlan0 interface add ap0 type __ap
+ExecStart=
+ExecStart=/sbin/wpa_supplicant -c/etc/wpa_supplicant/wpa_supplicant-%I.conf -Dnl80211,wext -i%I
+ExecStopPost=/sbin/iw dev ap0 del
+
+[Install]
+Alias=multi-user.target.wants/wpa_supplicant@%i.service
+EOF"
+
+sudo systemctl daemon-reload
 
 
+sudo systemctl enable wpa_supplicant@ap0.service
+sudo systemctl disable wpa_supplicant@wlan0.service
 
+echo "changing hostname..."
+sudo hostname -b wordclock
+
+echo "rebooting so set changes..."
 sudo reboot
-node-red-pi --max-old-space-size=128
-# still needs wifi access point setup and debugging
