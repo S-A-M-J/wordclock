@@ -14,7 +14,7 @@ npm i node-red-dashboard
 npm install node-red-contrib-amazon-echo
 sudo systemctl enable nodered.service
 
-node-red-start
+#node-red-start
 
 cd
 echo "installing packages..."
@@ -28,15 +28,6 @@ sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-port 898
 echo "downloading python file..."
 cd
 curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/wordclock.py >wordclock.py 
-
-echo "downloading flow file..."
-cd ~/.node-red
-rm flows.json
-cd
-curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/node-red-flows-wordclock.json >flows.json
-
-touch flows.json
-mv flows.json ~/.node-red/flows.json
 
 cd
 
@@ -66,7 +57,7 @@ sudo systemctl disable wpa_supplicant.service
 sudo systemctl enable wpa_supplicant@wlan0.service
 
 #setup ap0
-sudo cat > /etc/wpa_supplicant/wpa_supplicant-ap0.conf <<EOF
+sudo bash -c 'cat > /etc/wpa_supplicant/wpa_supplicant-ap0.conf' <<EOF
 country=DE
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
@@ -83,14 +74,14 @@ EOF
 
 sudo chmod 600 /etc/wpa_supplicant/wpa_supplicant-ap0.conf
 
-sudo cat > /etc/systemd/network/08-wlan0.network <<EOF
+sudo bash -c 'cat > /etc/systemd/network/08-wlan0.network' <<EOF
 [Match]
 Name=wlan0
 [Network]
 DHCP=yes
 EOF
 
-sudo cat > /etc/systemd/network/12-ap0.network <<EOF
+sudo bash -c 'cat > /etc/systemd/network/12-ap0.network' <<EOF
 [Match]
 Name=ap0
 [Network]
