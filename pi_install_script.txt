@@ -13,6 +13,9 @@ echo "installing node red nodes..."
 npm i node-red-dashboard
 npm install node-red-contrib-amazon-echo
 sudo systemctl enable nodered.service
+
+node-red-start
+
 cd
 echo "installing packages..."
 PACKAGES="python3-pip"
@@ -25,7 +28,6 @@ sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-port 898
 echo "downloading python file..."
 cd
 curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/wordclock.py >wordclock.py 
-
 
 echo "downloading flow file..."
 cd ~/.node-red
@@ -40,17 +42,16 @@ cd
 
 echo "creating hotspot and wlan services"
 # disable debian networking and dhcpcd
-sudo -Es
-systemctl mask networking.service dhcpcd.service
+sudo systemctl mask networking.service dhcpcd.service
 sudo mv /etc/network/interfaces /etc/network/interfaces~
-sed -i '1i resolvconf=NO' /etc/resolvconf.conf
+sudo sed -i '1i resolvconf=NO' /etc/resolvconf.conf
 
 # enable systemd-networkd
-systemctl enable systemd-networkd.service systemd-resolved.service
-ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+sudo systemctl enable systemd-networkd.service systemd-resolved.service
+sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 
 #setup wlan0
-cat >/etc/wpa_supplicant/wpa_supplicant-wlan0.conf <<EOF
+sudo cat >/etc/wpa_supplicant/wpa_supplicant-wlan0.conf <<EOF
 country=DE
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
@@ -60,12 +61,12 @@ network={
     psk="wordclock"
 }
 EOF
-chmod 600 /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
-systemctl disable wpa_supplicant.service
-systemctl enable wpa_supplicant@wlan0.service
+sudo chmod 600 /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
+sudo systemctl disable wpa_supplicant.service
+sudo systemctl enable wpa_supplicant@wlan0.service
 
 #setup ap0
-cat > /etc/wpa_supplicant/wpa_supplicant-ap0.conf <<EOF
+sudo cat > /etc/wpa_supplicant/wpa_supplicant-ap0.conf <<EOF
 country=DE
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
@@ -80,16 +81,16 @@ network={
 }
 EOF
 
-chmod 600 /etc/wpa_supplicant/wpa_supplicant-ap0.conf
+sudo chmod 600 /etc/wpa_supplicant/wpa_supplicant-ap0.conf
 
-cat > /etc/systemd/network/08-wlan0.network <<EOF
+sudo cat > /etc/systemd/network/08-wlan0.network <<EOF
 [Match]
 Name=wlan0
 [Network]
 DHCP=yes
 EOF
 
-cat > /etc/systemd/network/12-ap0.network <<EOF
+sudo cat > /etc/systemd/network/12-ap0.network <<EOF
 [Match]
 Name=ap0
 [Network]
@@ -100,7 +101,6 @@ DNS=84.200.69.80 1.1.1.1
 EOF
 
 sudo systemctl disable wpa_supplicant@ap0.service
-#sudo systemctl edit --full wpa_supplicant@ap0.service
 
 # insert modification of file 
 sudo mkdir -p /etc/systemd/system/wpa_supplicant@ap0.service.d/
