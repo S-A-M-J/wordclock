@@ -42,14 +42,14 @@ sudo systemctl enable systemd-networkd.service systemd-resolved.service
 sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 
 #setup wlan0
-sudo cat >/etc/wpa_supplicant/wpa_supplicant-wlan0.conf <<EOF
+sudo bash -c 'cat >/etc/wpa_supplicant/wpa_supplicant-wlan0.conf' <<EOF
 country=DE
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
 
 network={
-    ssid="wordclockNet"
-    psk="wordclock"
+    ssid="KamelZuVermieten"
+    psk="1235813213455.81"
 }
 EOF
 sudo chmod 600 /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
@@ -63,11 +63,11 @@ ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
 
 network={
-    ssid="RPiNet"
+    ssid="WordclockNet"
     mode=2
     key_mgmt=WPA-PSK
     proto=RSN WPA
-    psk="anotherPassword"
+    psk="wclpasskey"
     frequency=2412
 }
 EOF
