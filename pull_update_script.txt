@@ -1,15 +1,16 @@
 
 #!/bin/bash
 #wordclock update python files script
+echo "deleting old files if existent"
+if [ -d wordclock]; then
+	sudo rm -r wordclock
+fi
+sudo mkdir wordclock
 echo "Updating python files from github..."
-
-echo "deleting old file"
-rm wordclock.py
-
-echo "downloading new file..."
-
-cd
-curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/wordclock.py >wordclock.py 
+echo "downloading new files..."
+curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/changeToWifi.sh >wordclock/changeToWifi.sh
+curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/changeToAp.sh >wordclock/changeToAp.sh
+curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/wordclock.py >wordclock/wordclock.py 
 
 cd
 echo "downloading flow file..."
@@ -20,6 +21,8 @@ curl \-H 'Authorization: Bearer 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' \-H 'A
 
 touch flows.json
 mv flows.json ~/.node-red/flows.json
+cd 
+cd wordclock
+rm changeToWifi
 
-cd
 
