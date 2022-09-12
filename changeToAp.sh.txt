@@ -1,3 +1,3 @@
-sudo systemctl start wpa_supplicant@wlan0.service
+sudo systemctl start wpa_supplicant@ap0.service
 sleep 10
 node-red-restart
