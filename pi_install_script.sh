@@ -94,30 +94,30 @@ EOF
 sudo systemctl disable wpa_supplicant@ap0.service
 
 # insert modification of file 
-sudo mkdir -p /etc/systemd/system/wpa_supplicant@ap0.service.d/
-sudo sh -c "cat > /etc/systemd/system/wpa_supplicant@ap0.service.d/override.conf <<EOF
-[Unit]
-Description=WPA supplicant daemon (interface-specific version)
-Requires=sys-subsystem-net-devices-wlan0.device
-After=sys-subsystem-net-devices-wlan0.device
-Conflicts=wpa_supplicant@wlan0.service
-Before=network.target
-Wants=network.target
+#sudo mkdir -p /etc/systemd/system/wpa_supplicant@ap0.service.d/
+#sudo sh -c "cat > /etc/systemd/system/wpa_supplicant@ap0.service.d/override.conf <<EOF
+#[Unit]
+#Description=WPA supplicant daemon (interface-specific version)
+#Requires=sys-subsystem-net-devices-wlan0.device
+#After=sys-subsystem-net-devices-wlan0.device
+#Conflicts=wpa_supplicant@wlan0.service
+#Before=network.target
+#Wants=network.target
 
 # NetworkManager users will probably want the dbus version instead.
 
-[Service]
-Type=simple
-ExecStartPre=/sbin/iw dev wlan0 interface add ap0 type __ap
-ExecStart=
-ExecStart=/sbin/wpa_supplicant -c/etc/wpa_supplicant/wpa_supplicant-%I.conf -Dnl80211,wext -i%I
-ExecStopPost=/sbin/iw dev ap0 del
+#[Service]
+#Type=simple
+#ExecStartPre=/sbin/iw dev wlan0 interface add ap0 type __ap
+#ExecStart=
+#ExecStart=/sbin/wpa_supplicant -c/etc/wpa_supplicant/wpa_supplicant-%I.conf -Dnl80211,wext -i%I
+#ExecStopPost=/sbin/iw dev ap0 del
 
-[Install]
-Alias=multi-user.target.wants/wpa_supplicant@%i.service
-EOF"
+#[Install]
+#Alias=multi-user.target.wants/wpa_supplicant@%i.service
+#EOF"
 
-sudo systemctl daemon-reload
+#sudo systemctl daemon-reload
 
 sudo systemctl disable wpa_supplicant@ap0.service
 sudo systemctl enable wpa_supplicant@wlan0.service
