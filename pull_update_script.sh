@@ -23,9 +23,7 @@ curl \-H 'Authorization: Bearer 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' \-H 'A
 sudo touch flows.json
 sudo mv flows.json ~/.node-red/flows.json
 cd 
-cd wordclock
-rm changeToWifi
-cd
+
 node-red-restart
 
 
