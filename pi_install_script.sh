@@ -27,10 +27,7 @@ sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-port 898
 
 echo "downloading github files..."
 cd
-mkdir -m 777 wordclock
-cd wordclock
 curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/pull_update_script.sh >pull-update.sh
-cd
 echo "creating hotspot and wlan services"
 # disable debian networking and dhcpcd
 sudo systemctl mask networking.service dhcpcd.service
