@@ -24,5 +24,7 @@ mv flows.json ~/.node-red/flows.json
 cd 
 cd wordclock
 rm changeToWifi
+cd
+node-red-restart
 
 
