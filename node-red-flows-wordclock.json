@@ -163,20 +163,11 @@
         "hidden": false
     },
     {
-        "id": "4833dda8c0523c35",
-        "type": "ui_tab",
-        "name": "Dashboard",
-        "icon": "dashboard",
-        "order": 1,
-        "disabled": false,
-        "hidden": false
-    },
-    {
         "id": "cfddbc73e4437724",
         "type": "ui_group",
-        "name": "Local Settings",
-        "tab": "907bbe60.b555f",
-        "order": 2,
+        "name": "Set Time",
+        "tab": "881f81eaac918727",
+        "order": 4,
         "disp": true,
         "width": "6",
         "collapse": false,
@@ -207,10 +198,10 @@
     {
         "id": "4d0f060d.dee7e8",
         "type": "ui_group",
-        "name": "Update",
+        "name": "Wifi",
         "tab": "907bbe60.b555f",
-        "order": 4,
-        "disp": false,
+        "order": 3,
+        "disp": true,
         "width": "6",
         "collapse": false,
         "className": ""
@@ -220,7 +211,7 @@
         "type": "ui_group",
         "name": "Current wifi",
         "tab": "907bbe60.b555f",
-        "order": 3,
+        "order": 2,
         "disp": true,
         "width": "6",
         "collapse": false,
@@ -334,6 +325,16 @@
         "type": "ui_tab",
         "name": "Performance",
         "icon": "show_chart"
+    },
+    {
+        "id": "f5b6f95ae9ce6232",
+        "type": "ui_spacer",
+        "z": "cc2941a05159f488",
+        "name": "spacer",
+        "group": "cfddbc73e4437724",
+        "order": 2,
+        "width": 1,
+        "height": 1
     },
     {
         "id": "7f7f42f190b95080",
@@ -1423,11 +1424,11 @@
         "width": 6,
         "height": 4,
         "name": "",
-        "label": "How to",
+        "label": "",
         "format": "{{msg.payload}}",
         "layout": "col-center",
         "className": "",
-        "x": 500,
+        "x": 490,
         "y": 940,
         "wires": []
     },
@@ -2179,7 +2180,7 @@
         "id": "57d94bd5f9422b31",
         "type": "exec",
         "z": "d5e37a252238f604",
-        "command": "sudo python ~/wordclock.py",
+        "command": "sudo python ~/wordclock/wordclock.py",
         "addpay": "payload",
         "append": "",
         "useSpawn": "false",
@@ -2187,7 +2188,7 @@
         "winHide": false,
         "oldrc": false,
         "name": "",
-        "x": 800,
+        "x": 830,
         "y": 260,
         "wires": [
             [
@@ -2608,7 +2609,7 @@
         "type": "function",
         "z": "cc2941a05159f488",
         "name": "updateWpasupplicant",
-        "func": "var template = `sudo tee /etc/wpa_supplicant/wpa_supplicant.conf <<EOF\nctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=DE\n\n${msg.payload}\nEOF\\n\n`\n\nmsg.payload = template\n\nreturn msg;",
+        "func": "var template = `sudo tee /etc/wpa_supplicant/wpa_supplicant-wlan0.conf <<EOF\nctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=DE\n\n${msg.payload}\nEOF\\n\n`\n\nmsg.payload = template\n\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -2732,7 +2733,7 @@
         "z": "cc2941a05159f488",
         "name": "",
         "group": "4d0f060d.dee7e8",
-        "order": 2,
+        "order": 1,
         "width": 0,
         "height": 0,
         "passthru": false,
@@ -2763,7 +2764,7 @@
         "tooltip": "",
         "place": "Select a WIFI",
         "group": "4d0f060d.dee7e8",
-        "order": 1,
+        "order": 2,
         "width": 0,
         "height": 0,
         "passthru": false,
@@ -2900,7 +2901,7 @@
         "z": "cc2941a05159f488",
         "position": "top right",
         "displayTime": "3",
-        "highlight": "",
+        "highlight": "Green",
         "sendall": true,
         "outputs": 0,
         "ok": "OK",
@@ -2910,7 +2911,7 @@
         "topic": "",
         "name": "",
         "x": 1650,
-        "y": 200,
+        "y": 220,
         "wires": []
     },
     {
@@ -2935,7 +2936,7 @@
         "label": "Set hour",
         "tooltip": "",
         "group": "cfddbc73e4437724",
-        "order": 1,
+        "order": 3,
         "width": 0,
         "height": 0,
         "passthru": true,
@@ -2962,7 +2963,7 @@
         "label": "Set minute",
         "tooltip": "",
         "group": "cfddbc73e4437724",
-        "order": 2,
+        "order": 4,
         "width": 0,
         "height": 0,
         "passthru": true,
@@ -2989,7 +2990,7 @@
         "label": "Set seconds",
         "tooltip": "",
         "group": "cfddbc73e4437724",
-        "order": 3,
+        "order": 5,
         "width": 0,
         "height": 0,
         "passthru": true,
@@ -3014,7 +3015,7 @@
         "z": "cc2941a05159f488",
         "name": "",
         "group": "cfddbc73e4437724",
-        "order": 4,
+        "order": 6,
         "width": 0,
         "height": 0,
         "passthru": false,
@@ -3035,23 +3036,6 @@
                 "bbcd4c9756d77d43"
             ]
         ]
-    },
-    {
-        "id": "0b5a4ebb0b6df0ed",
-        "type": "ui_text",
-        "z": "cc2941a05159f488",
-        "group": "cfddbc73e4437724",
-        "order": 5,
-        "width": 0,
-        "height": 0,
-        "name": "",
-        "label": "Current Time",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "className": "",
-        "x": 530,
-        "y": 720,
-        "wires": []
     },
     {
         "id": "44ed520e9b3145dc",
@@ -3215,14 +3199,8 @@
                 "p": "time",
                 "pt": "flow",
                 "to": "payload",
-                "tot": "msg"
-            },
-            {
-                "t": "set",
-                "p": "payload",
-                "pt": "msg",
-                "to": "payload",
-                "tot": "msg"
+                "tot": "msg",
+                "dc": true
             }
         ],
         "action": "",
@@ -3230,7 +3208,7 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 1010,
+        "x": 970,
         "y": 620,
         "wires": [
             []
@@ -3259,7 +3237,6 @@
         "y": 740,
         "wires": [
             [
-                "0b5a4ebb0b6df0ed",
                 "a999a49054fda7f3"
             ]
         ]
@@ -3269,7 +3246,7 @@
         "type": "function",
         "z": "cc2941a05159f488",
         "name": "",
-        "func": "const hours = msg.payload[0];\nconst minutes = msg.payload[1];\nconst seconds = msg.payload[2];\nmsg.payload = hours + \":\" + minutes + \":\" + seconds\nreturn msg;",
+        "func": "let hours = msg.payload[0];\nlet minutes = msg.payload[1];\nlet seconds = msg.payload[2];\nif (hours < 10) {\n    hours = \"0\"+hours;\n}\nif (minutes < 10) {\n    minutes = \"0\" + minutes;\n}\nif (seconds < 10) {\n    seconds = \"0\" + seconds;\n}\n\nmsg.payload = hours + \":\" + minutes + \":\" + seconds\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -3298,9 +3275,16 @@
         "x": 530,
         "y": 760,
         "wires": [
-            [],
-            [],
-            []
+            [
+                "49999f125f149f1a",
+                "65d7f194bc7c893a"
+            ],
+            [
+                "65d7f194bc7c893a"
+            ],
+            [
+                "65d7f194bc7c893a"
+            ]
         ]
     },
     {
@@ -3308,8 +3292,8 @@
         "type": "function",
         "z": "cc2941a05159f488",
         "name": "get time",
-        "func": "let now = new Date();\nconst msg1 = { payload: now.getHours() };\nconst msg2 = { payload: now.getMinutes() };\nconst msg3 = { payload: now.getSeconds() };\nconst msg4 = { payload: msg1.payload+\":\"+msg2.payload+\":\"+msg3.payload };\n\nreturn [msg1,msg2,msg3,msg4];",
-        "outputs": 4,
+        "func": "let now = new Date();\nconst msg1 = { payload: now.getHours() };\nconst msg2 = { payload: now.getMinutes() };\nconst msg3 = { payload: now.getSeconds() };\n\nreturn [msg1,msg2,msg3,msg4];",
+        "outputs": 3,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
@@ -3325,9 +3309,6 @@
             ],
             [
                 "7ed27634be0b65cb"
-            ],
-            [
-                "0b5a4ebb0b6df0ed"
             ]
         ]
     },
@@ -3375,11 +3356,17 @@
         "oldrc": false,
         "name": "",
         "x": 450,
-        "y": 360,
+        "y": 340,
         "wires": [
-            [],
-            [],
-            []
+            [
+                "6dde319ed5b6daab"
+            ],
+            [
+                "6dde319ed5b6daab"
+            ],
+            [
+                "6dde319ed5b6daab"
+            ]
         ]
     },
     {
@@ -3423,7 +3410,7 @@
                 "t": "set",
                 "p": "connectBtn",
                 "pt": "flow",
-                "to": "sudo systemctl start wpa_supplicant@wlan0.service",
+                "to": "sudo bash wordclock/changeToWifi.sh",
                 "tot": "str"
             }
         ],
@@ -3464,7 +3451,7 @@
                 "t": "set",
                 "p": "connectBtn",
                 "pt": "flow",
-                "to": "sudo systemctl start wpa_supplicant@ap0.service",
+                "to": "sudo bash wordclock/changeToAp.sh",
                 "tot": "str"
             }
         ],
@@ -3527,9 +3514,16 @@
         "rules": [
             {
                 "t": "set",
-                "p": "payload",
+                "p": "topic",
                 "pt": "msg",
                 "to": "Disconnecting and switching to offline mode",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "This might take up to two minutes",
                 "tot": "str"
             }
         ],
@@ -3586,7 +3580,7 @@
         "host": "www.google.com",
         "timer": "20",
         "inputs": 1,
-        "x": 300,
+        "x": 290,
         "y": 960,
         "wires": [
             [
@@ -3709,6 +3703,13 @@
                 "t": "set",
                 "p": "payload",
                 "pt": "msg",
+                "to": "This might take up to a minute",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "topic",
+                "pt": "msg",
                 "to": "Attempting to connect",
                 "tot": "str"
             }
@@ -3802,7 +3803,7 @@
                 "pt": "msg",
                 "from": "true",
                 "fromt": "bool",
-                "to": "{\"group\":{\"hide\":[\"Wifi_Local_Settings\"],\"show\":[\"Wifi_Current_wifi\"]}}",
+                "to": "{\"group\":{\"hide\":[\"Home_Set_Time\"],\"show\":[\"Wifi_Current_wifi\"]}}",
                 "tot": "json"
             },
             {
@@ -3811,7 +3812,7 @@
                 "pt": "msg",
                 "from": "false",
                 "fromt": "bool",
-                "to": "{\"group\":{\"show\":[\"Wifi_Local_Settings\"],\"hide\":[\"Wifi_Current_wifi\"]}}",
+                "to": "{\"group\":{\"show\":[\"Home_Set_Time\"],\"hide\":[\"Wifi_Current_wifi\"]}}",
                 "tot": "json"
             }
         ],
@@ -3824,7 +3825,8 @@
         "y": 1000,
         "wires": [
             [
-                "3c64fa14751d0fe1"
+                "3c64fa14751d0fe1",
+                "d3e17e91a1a9a1ab"
             ]
         ]
     },
@@ -3834,7 +3836,7 @@
         "z": "cc2941a05159f488",
         "name": "",
         "events": "all",
-        "x": 1260,
+        "x": 1280,
         "y": 1000,
         "wires": [
             []
@@ -3846,10 +3848,10 @@
         "z": "cc2941a05159f488",
         "group": "cfddbc73e4437724",
         "name": "",
-        "order": 6,
+        "order": 1,
         "width": 0,
         "height": 0,
-        "format": "  <html>\n  <head>\n  <title>Time</title>\n  <script type=\"text/javascript\"> \n  \n  var date = new Date().toString();\n  document.getElementById('ct').innerHTML = date;\n  \n  this.scope.sendDate = function() {\n      console.log(\"in function\")\n   // return {payload: new Date().toString()}; // .valueOf() \n    return {payload: new Date().valueOf()}; // \n  }\n \n</script>\n  \n  </head>\n\n  <body>\n  <div id='ct' style=\"margin-bottom: 40px;\"></div>\n<md-button ng-click=\"send(sendDate())\">\n    Update time from device\n</md-button>\n\n  </body>\n  </html>",
+        "format": "  <html>\n  <head>\n  <title>Time</title>\n  <script type=\"text/javascript\"> \n  \n  //var date = new Date().toString();\n  //document.getElementById('ct').innerHTML = date;\n  \n  this.scope.sendDate = function() {\n      console.log(\"in function\")\n   // return {payload: new Date().toString()}; // .valueOf() \n    return {payload: new Date().valueOf()}; // \n  }\n \n</script>\n  <style>\n    .customButton {\n      background-color: green;\n    }\n  </style>\n  </head>\n  <body>\n  <div id='ct'></div>\n<md-button class=\"customButton\" ng-click=\"send(sendDate())\">\n    Update time from laptop/phone\n</md-button>\n\n  </body>\n  </html>\n  ",
         "storeOutMessages": true,
         "fwdInMessages": true,
         "resendOnRefresh": true,
@@ -3872,11 +3874,12 @@
         "tosidebar": true,
         "console": false,
         "tostatus": false,
-        "complete": "false",
+        "complete": "true",
+        "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 530,
-        "y": 820,
+        "x": 730,
+        "y": 800,
         "wires": []
     },
     {
@@ -3884,7 +3887,7 @@
         "type": "function",
         "z": "cc2941a05159f488",
         "name": "",
-        "func": "let online = global.get(\"online\");\nif (!online){\n    return msg;   \n}\n\n",
+        "func": "let online = global.get(\"online\");\nif (!online){\n    let timestamp = msg.payload.toString();\n    timestamp = timestamp.slice(0,-3);\n    msg.payload = \"@\"+timestamp;\n    return msg;   \n}\n\n",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -3894,8 +3897,8 @@
         "y": 780,
         "wires": [
             [
-                "65d7f194bc7c893a",
-                "a999a49054fda7f3"
+                "a999a49054fda7f3",
+                "65d7f194bc7c893a"
             ]
         ]
     },
@@ -4160,6 +4163,149 @@
         ]
     },
     {
+        "id": "6dde319ed5b6daab",
+        "type": "debug",
+        "z": "cc2941a05159f488",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 620,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "0b5a4ebb0b6df0ed",
+        "type": "ui_text",
+        "z": "cc2941a05159f488",
+        "group": "cfddbc73e4437724",
+        "order": 7,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Current Time",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "x": 850,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "49999f125f149f1a",
+        "type": "exec",
+        "z": "cc2941a05159f488",
+        "command": "date",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 690,
+        "y": 720,
+        "wires": [
+            [
+                "0b5a4ebb0b6df0ed"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "64aac7d049958d0e",
+        "type": "ui_text",
+        "z": "cc2941a05159f488",
+        "group": "4d0f060d.dee7e8",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Currently saved wifi",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "className": "",
+        "x": 1550,
+        "y": 1080,
+        "wires": []
+    },
+    {
+        "id": "d3e17e91a1a9a1ab",
+        "type": "exec",
+        "z": "cc2941a05159f488",
+        "command": "sudo grep ssid /etc/wpa_supplicant/wpa_supplicant-wlan0.conf",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 1170,
+        "y": 1060,
+        "wires": [
+            [
+                "5febbeada91698a1"
+            ],
+            [],
+            []
+        ]
+    },
+    {
+        "id": "5febbeada91698a1",
+        "type": "function",
+        "z": "cc2941a05159f488",
+        "name": "function 1",
+        "func": "let ssid = msg.payload;\nssid = ssid.substring(6);\nmsg.payload = ssid; \nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1520,
+        "y": 1040,
+        "wires": [
+            [
+                "64aac7d049958d0e"
+            ]
+        ]
+    },
+    {
+        "id": "cbc8fea3ec29ce4b",
+        "type": "inject",
+        "z": "cc2941a05159f488",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 860,
+        "y": 1160,
+        "wires": [
+            [
+                "d3e17e91a1a9a1ab"
+            ]
+        ]
+    },
+    {
         "id": "ae227b1fed51d255",
         "type": "amazon-echo-hub",
         "z": "584e8b902da11e7a",
@@ -4202,8 +4348,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 630,
-        "y": 340,
+        "x": 610,
+        "y": 280,
         "wires": []
     },
     {
