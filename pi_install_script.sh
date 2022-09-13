@@ -27,6 +27,8 @@ sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-port 898
 
 echo "downloading github files..."
 cd
+sudo mkdir wordclock
+cd
 curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/pull_update_script.sh >wordclock/pull-update.sh
 
 echo "creating hotspot and wlan services"
