@@ -25,11 +25,11 @@ sudo pip install rpi_ws281x
 sudo apt-get install iptables-persistent -y
 sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-port 8980
 
-echo "downloading python file..."
+echo "downloading github files..."
 cd
 curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/wordclock.py >wordclock.py 
-
 cd
+curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/pull_update_script.sh >wordclock/pull-update.sh
 
 echo "creating hotspot and wlan services"
 # disable debian networking and dhcpcd
