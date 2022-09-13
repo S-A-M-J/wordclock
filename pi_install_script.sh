@@ -92,6 +92,7 @@ DNS=84.200.69.80 1.1.1.1
 EOF
 
 sudo systemctl disable wpa_supplicant@ap0.service
+sudo systemctl edit --full wpa_supplicant@ap0.service
 
 # insert modification of file 
 #sudo mkdir -p /etc/systemd/system/wpa_supplicant@ap0.service.d/
@@ -119,8 +120,8 @@ sudo systemctl disable wpa_supplicant@ap0.service
 
 #sudo systemctl daemon-reload
 
-sudo systemctl disable wpa_supplicant@ap0.service
-sudo systemctl enable wpa_supplicant@wlan0.service
+#sudo systemctl disable wpa_supplicant@ap0.service
+#sudo systemctl enable wpa_supplicant@wlan0.service
 
-echo "rebooting so set changes..."
-sudo reboot
+#echo "rebooting so set changes..."
+#sudo reboot
