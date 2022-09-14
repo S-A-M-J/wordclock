@@ -22,8 +22,9 @@ PACKAGES="python3-pip"
 sudo apt-get install $PACKAGES -y
 sudo apt-get install scons
 sudo pip install rpi_ws281x
-sudo apt-get install iptables-persistent -y
 sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-port 8980
+sudo apt-get install iptables-persistent -y
+
 
 echo "downloading github files..."
 cd
