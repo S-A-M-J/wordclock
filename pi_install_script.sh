@@ -5,9 +5,8 @@ echo "Running raspi wordclock config script..."
 echo "updating packages..."
 sudo apt-get update && sudo apt-get upgrade -y
 echo "installing node-red..."
-cd /home/pi
 curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered >tmp.sh
-bash tmp.sh
+sudo -u pi bash tmp.sh
 rm tmp.sh
 cd
 cd $HOME/.node-red
