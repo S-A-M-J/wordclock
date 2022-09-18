@@ -9,7 +9,7 @@ curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/
 sudo -u pi bash tmp.sh
 rm tmp.sh
 cd
-cd $HOME/.node-red
+cd /home/pi/.node-red
 echo "installing node red nodes..."
 npm i node-red-dashboard
 npm install node-red-contrib-amazon-echo
