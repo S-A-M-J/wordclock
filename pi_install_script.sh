@@ -8,6 +8,9 @@ echo "installing node-red..."
 curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered >tmp.sh
 sudo -u pi bash tmp.sh
 rm tmp.sh
+sudo -u pi node-red-start
+wait(60)
+sudo -u pi node-red-stop
 cd
 cd /home/pi/.node-red
 echo "installing node red nodes..."
