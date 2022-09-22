@@ -627,7 +627,7 @@ Name=ap0
 Address=192.168.4.1/24
 DHCPServer=yes
 [DHCPServer]
-DNS=84.200.69.80 84.200.70.40
+DNS=84.200.69.80 1.1.1.1
 EOF
 
   infotitle "Now for some slick systemd unit editing!"
