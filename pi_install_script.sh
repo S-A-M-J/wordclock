@@ -30,6 +30,6 @@ cd /home/pi
 curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/pull_update_script.sh >pull-update.sh
 echo "creating hotspot and wlan services"
 cd
-curl \-H 'Accept: application/vnd.github.v3.raw' \-O https://api.github.com/repos/Autodrop3d/raspiApWlanScripts/contents/setup_wlan_and_AP_modes.sh
+curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \-O https://api.github.com/repos/S-A-M-J/wordclock/contents/setup_wlan_and_AP_modes.sh
 sudo bash setup_wlan_and_AP_modes.sh -s TestWlan -p 12345678 -a WordclockNet -r WCKey258!
 echo "please reboot now by entering sudo reboot now"
