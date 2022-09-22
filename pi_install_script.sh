@@ -21,8 +21,9 @@ sudo apt-get install $PACKAGES -y
 sudo apt-get install scons
 sudo pip install rpi_ws281x
 sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-port 8980
-sudo apt-get install iptables-persistent -y
-
+echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo debconf-set-selections
+echo iptables-persistent iptables-persistent/autosave_v6 boolean true | sudo debconf-set-selections
+sudo apt-get -y install iptables-persistent
 
 echo "downloading github files..."
 cd
