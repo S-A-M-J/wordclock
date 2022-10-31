@@ -115,31 +115,31 @@ struct currentTime {
   uint8_t seconds;
 };
 
-uint8_t vor [] = {3, 85};
-uint8_t nach [] = {4, 80};
+uint8_t vor [] = {3, 74};
+uint8_t nach [] = {4, 69};
 
-uint8_t ein [] = {3, 50};
-uint8_t eins [] = {4, 50};
-uint8_t zwei [] = {4, 48};
-uint8_t drei [] = {4, 43};
-uint8_t vier [] = {4, 33};
-uint8_t fuenf [] = {4, 37};
+uint8_t ein [] = {3, 48};
+uint8_t eins [] = {4, 48};
+uint8_t zwei [] = {4, 46};
+uint8_t drei [] = {4, 41};
+uint8_t vier [] = {4, 31};
+uint8_t fuenf [] = {4, 35};
 uint8_t sechs [] = {5, 2};
-uint8_t sieben [] = {6, 53};
+uint8_t sieben [] = {6, 51};
 uint8_t acht [] = {4, 19};
 uint8_t neun [] = {4, 27};
 uint8_t zehn [] = {4, 15};
 uint8_t elf [] = {3, 24};
-uint8_t zwoelf [] = {5, 60};
+uint8_t zwoelf [] = {5, 58};
 
 uint8_t es [] = {2, 111};
-uint8_t ist [] = {3, 107zzz};
+uint8_t ist [] = {3, 107};
 
 uint8_t fuenfMin [] = {4, 102};
 uint8_t zehnMin [] = {4, 90};
 uint8_t viertel [] = {7, 79};
 uint8_t zwanzig [] = {7, 94};
-uint8_t halb [] = {4, 66};
+uint8_t halb [] = {4, 64};
 
 uint8_t uhr [] = {3, 9};
 uint8_t uhrleds [] = {0, 113, 101, 12};
@@ -287,7 +287,9 @@ void printLocalTime() {
 }
 
 void updateRTC() {
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+  configTime(0, 0, ntpServer);
+  setenv("TZ","CET-1CEST,M3.5.0,M10.5.0/3",1);
+  tzset();
   struct tm timeinfo;
 }
 
@@ -371,9 +373,7 @@ void setup() {
         setUhrfarbe(0, 0, 0);
         setWord(uhrleds, false);
         FastLED.show();
-      } else {
-        initialBLEConnect = true;
-      }
+      } 
     }
     if (wifiConfigured) {
       delay(500);
@@ -386,7 +386,6 @@ void setup() {
           wordclockRxCharacteristic.setValue("wifiFailed");
           wordclockRxCharacteristic.notify();
           wifiConfigured = false;
-          break;
         }
       }
       if (WiFi.status() == WL_CONNECTED) {
@@ -409,9 +408,6 @@ void setup() {
   }
   FastLED.clear();
 
-
-
-  
   updateRTC();
   printLocalTime();
   IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
