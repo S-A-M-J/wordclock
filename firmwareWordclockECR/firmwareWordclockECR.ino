@@ -1,3 +1,4 @@
+
 /*
     Based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleServer.cpp
     Ported to Arduino ESP32 by Evandro Copercini
@@ -19,6 +20,10 @@ ESP32Time rtc(0);
 #include <Preferences.h>
 
 Preferences preferences;
+
+#include <Espalexa.h>
+Espalexa espalexa;
+void worclockAlexaChanged(uint8_t brightness);
 
 #define NUM_LEDS 114
 #define DATA_PIN 4
@@ -151,6 +156,7 @@ bool updateCorners = true;
 bool updateWords = true;
 bool updateTime = true;
 bool partyMode = false;
+bool alexaActivated = false;
 
 
 color uhrfarbe = {125, 255, 255};
@@ -178,6 +184,12 @@ void setWord(uint8_t wordLeds[], boolean indice) {
 
   }
 */
+
+void wordclockAlexaChanged(EspalexaDevice* wordclockAlexa) {
+  setUhrfarbe(wordclockAlexa->getHue(),wordclockAlexa->getSat(),wordclockAlexa->getPercent()*2.55);
+
+}
+
 void handleIRCommand(uint8_t cmd) {
   Serial.println(cmd);
   switch (cmd) {
@@ -413,9 +425,16 @@ void setup() {
   IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
   Serial.println("loop begins");
   setUhrfarbe(0, 255, 255);
+  if(alexaActivated){
+    espalexa.addDevice("wordclock", wordclockAlexaChanged, EspalexaDeviceType::color);
+    espalexa.begin();
+  }
 }
 //--------------------LOOP-----------------------------------------
 void loop() {
+  if(alexaActivated){
+    espalexa.loop();
+  }
   t.hours = rtc.getHour();
   t.minutes = rtc.getMinute();
   t.seconds = rtc.getSecond();
@@ -579,7 +598,7 @@ void loop() {
           break;
         case 3:
           leds[0] = CHSV(uhrfarbe.h, uhrfarbe.s, uhrfarbe.b);
-          leds[113] = CHSV(uhrfarbe.h, uhrfarbe.s, uhrfarbe.b);
+          leds[113] = CHSV(uhrfarbe.h, uhrfarbe.s, uhrfarbe.b);  
           leds[101] = CHSV(uhrfarbe.h, uhrfarbe.s, uhrfarbe.b);
           break;
         case 4:
