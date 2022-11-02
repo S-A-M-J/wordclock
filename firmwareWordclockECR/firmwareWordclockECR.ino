@@ -38,11 +38,12 @@ void worclockAlexaChanged(uint8_t brightness);
 #define CHARACTERISTIC_UUID_RX "a5f125c2-7cec-4334-9214-58cffb8706c0"
 #define CHARACTERISTIC_UUID_TX "a5f125c1-7cec-4334-9214-58cffb8706c0"
 
-boolean deviceConnected = false;
-boolean advertising = false;
-boolean wifiConfigured = false;
-boolean initialBLEConnect = true;
-boolean noCredentialsFound = false;
+bool deviceConnected = false;
+bool advertising = false;
+bool wifiConfigured = false;
+bool initialBLEConnect = true;
+bool noCredentialsFound = false;
+bool alexaActivated = false;
 char ssid[64] = {};
 char password[64] = {};
 
@@ -64,7 +65,7 @@ class MyServerCallbacks: public BLEServerCallbacks {
     }
 };
 
-
+//------------------------BLUETOOTH_CALLBACK---------------------------------------------------------------------------
 class incomingCallbackHandler: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic* wordclockTxCharacteristic) {
       char *incomingMessage = (char*)wordclockTxCharacteristic->getValue().c_str();
@@ -94,6 +95,10 @@ class incomingCallbackHandler: public BLECharacteristicCallbacks {
       } else if (messagePart = "#kill") {
         delay(2000);
         ESP.restart();
+      } else if (messagePart = "#alexaOn") {
+        alexaActivated = true;
+      } else if (messagePart = "#alexaOff") {
+        alexaActivated = false;
       }
     }
 };
@@ -156,7 +161,7 @@ bool updateCorners = true;
 bool updateWords = true;
 bool updateTime = true;
 bool partyMode = false;
-bool alexaActivated = false;
+
 
 
 color uhrfarbe = {125, 255, 255};
