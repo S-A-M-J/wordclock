@@ -99,6 +99,9 @@ class incomingCallbackHandler: public BLECharacteristicCallbacks {
         alexaActivated = true;
       } else if (messagePart = "#alexaOff") {
         alexaActivated = false;
+      } else if (messagePart = "#reset") {
+        preferences.remove(ssid);
+        preferences.remove(password);
       }
     }
 };
