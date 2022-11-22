@@ -7,7 +7,7 @@ sudo apt-get update && sudo apt-get upgrade -y
 echo "installing node-red..."
 curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered >tmp.sh
 sudo -u pi bash tmp.sh --confirm-install --confirm-pi
-rm tmp.sh
+sudo rm tmp.sh
 cd
 cd /home/pi/.node-red
 echo "installing node red nodes..."
