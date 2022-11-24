@@ -6,7 +6,7 @@ cd /home/pi
 if [ -d wordclock]; then
 	sudo rm -r wordclock
 fi
-mkdir -m 777 wordclock
+mkdir -m 777 /home/pi/wordclock
 echo "Updating python files from github..."
 echo "downloading new files..."
 cd
