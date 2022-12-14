@@ -215,12 +215,13 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
     } else if (strcmp(messagePart, "#test1") == 0) {
       FastLED.clear();
       FastLED.show();
-      for (int i = 0; i < 114; i++) {
-        leds[i] = CRGB::Red;
+      for (int k = 0; k < 114; k++) {
+        leds[k] = CRGB::Red;
         FastLED.show();
         delay(100);
-        leds[i] = CRGB::Black;
+        leds[k] = CRGB::Black;
         FastLED.show();
+        delay(10);
       }
     } else if (strcmp(messagePart, "#test2") == 0) {
       FastLED.clear();
@@ -272,8 +273,6 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
       displayOneSec();
       setWord(uhr);
       displayOneSec();
-      updateCorners = true;
-      updateWords = true;
     } else if (strcmp(messagePart, "#param") == 0) {
       if (WiFi.status() == WL_CONNECTED) {
         char value[64] = "stat,co,";
@@ -286,6 +285,8 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
         wordclockRxCharacteristic.notify();
       }
     }
+      updateCorners = true;
+      updateWords = true;
   }
 };
 
