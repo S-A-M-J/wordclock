@@ -42,6 +42,7 @@ bool alexaActivated = false;
 bool notify = false;
 char ssid[64] = {};
 char password[64] = {};
+char alexa[8] = {};
 bool alexaActivatedInitial = true;
 
 long wifiTimeOutTimer = 0;
@@ -201,11 +202,14 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
       if (alexaActivatedInitial) {
         espalexa.addDevice("wortuhr", colorLightChanged, EspalexaDeviceType::color);
         espalexa.begin();
-        //alexa callback handler
+        preferences.remove("alexa");
+        preferences.putString("alexa","on");
       }
       alexaActivatedInitial = false;
     } else if (strcmp(messagePart, "#alexaOff") == 0) {
       alexaActivated = false;
+      preferences.remove("alexa");
+      preferences.putString("alexa","off");
       if (!alexaActivatedInitial) {
       }
     } else if (strcmp(messagePart, "#reset") == 0) {
@@ -435,12 +439,25 @@ void setup() {
   Serial.begin(115200);
   preferences.begin("credentials", false);
   String readout = preferences.getString("ssid", "");
+  //add alexa preferences readout
   strcpy(ssid, readout.c_str());
   if (ssid[0] != '\0') {
     wifiConfigured = true;
     readout = preferences.getString("password", "");
     strcpy(password, readout.c_str());
     noCredentialsFound = false;
+    readout = preferences.getString("alexa", "");
+    strcpy(alexa, readout.c_str());
+    if (strcmp(alexa, "on") == 0){
+      alexaActivated = true;
+      if (alexaActivatedInitial) {
+        espalexa.addDevice("wortuhr", colorLightChanged, EspalexaDeviceType::color);
+        espalexa.begin();
+        preferences.remove("alexa");
+        preferences.putString("alexa","on");
+      }
+      alexaActivatedInitial = false;
+    }
   } else {
     wifiConfigured = false;
     noCredentialsFound = true;
@@ -544,7 +561,7 @@ void setup() {
     }
   }
   FastLED.clear();
-
+  
   updateRTC();
   printLocalTime();
   IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
