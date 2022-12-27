@@ -50,6 +50,8 @@ bool OTAactivated = false;
 
 long wifiTimeOutTimer = 0;
 
+IPAddress ip;
+char ipString[20]={};
 // Define the array of leds
 CRGB leds[NUM_LEDS];
 
@@ -335,6 +337,8 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
         delay(300);
         strcpy(value, "ssid,");
         strcat(value, ssid);
+        strcat(value, ",");
+        strcat(value, ip.toString().c_str());
         wordclockRxCharacteristic.setValue(value);
         wordclockRxCharacteristic.notify();
       }
@@ -592,11 +596,14 @@ void setup() {
         Serial.println("WiFi connected.");
         wifiConfigured = false;
         char value[64] = "stat,co,";
+        ip = WiFi.localIP();
         wordclockRxCharacteristic.setValue(value);
         wordclockRxCharacteristic.notify();
         delay(50);
         strcpy(value, "ssid,");
         strcat(value, ssid);
+        strcat(value, ",");
+        strcat(value, ip.toString().c_str());
         wordclockRxCharacteristic.setValue(value);
         wordclockRxCharacteristic.notify();
         setUhrfarbe(96, 255, 255);
