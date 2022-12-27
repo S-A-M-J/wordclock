@@ -16,6 +16,8 @@ ESP32Time rtc(0);
 #include <Espalexa.h>
 #include <Preferences.h>
 
+#include <ArduinoOTA.h>
+
 Preferences preferences;
 
 void worclockAlexaChanged(uint8_t brightness);
@@ -83,7 +85,7 @@ void setupOTA() {
         else if (error == OTA_END_ERROR) Serial.println("End Failed");
 
         while (1) {  //kill power if failed
-          killPower();
+          ESP.restart();
         }
       });
 
@@ -96,7 +98,7 @@ void setupOTA() {
 }
 
 void checkOTA() {
-  if (WiFi.status() == WL_CONNECTED && OTAsetup) {
+  if (WiFi.status() == WL_CONNECTED && OTAactivated) {
     ArduinoOTA.handle();
   }
 }
