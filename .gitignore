@@ -3,6 +3,9 @@
 # Prerequisites
 *.d
 
+# Build files
+firmwareWordclockECR_OTA/build
+
 # Object files
 *.o
 *.ko
