@@ -215,6 +215,13 @@ void setWord(uint8_t wordLeds[], boolean indice) {
   }
 }
 
+void displayOneSec() {
+  FastLED.show();
+  delay(1000);
+  //FastLED.clear();
+  FastLED.show();
+}
+
 //------------------------BLUETOOTH_CALLBACK---------------------------------------------------------------------------
 class incomingCallbackHandler : public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic* wordclockTxCharacteristic) {
@@ -270,6 +277,7 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
       preferences.end();
       ESP.restart();
     } else if (strcmp(messagePart, "#test1") == 0) {
+      //clockON = false;
       FastLED.clear();
       FastLED.show();
       for (int k = 0; k < 114; k++) {
@@ -280,14 +288,16 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
         FastLED.show();
         delay(10);
       }
+      //clockON = true;
     } else if (strcmp(messagePart, "#OTAOn") == 0) {
      //add indicator
       setupOTA();
     }
      else if (strcmp(messagePart, "#test2") == 0) {
+      //clockON = false;
       FastLED.clear();
       FastLED.show();
-      setUhrfarbe(255, 255, 255);
+      //setUhrfarbe(125, 255, 255);
       setWord(es);
       displayOneSec();
       setWord(ist);
@@ -334,6 +344,7 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
       displayOneSec();
       setWord(uhr);
       displayOneSec();
+      //clockON = true;
     } else if (strcmp(messagePart, "#param") == 0) {
       if (WiFi.status() == WL_CONNECTED) {
         char value[64] = "stat,co,";
@@ -354,12 +365,6 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
 };
 
 
-void displayOneSec() {
-  FastLED.show();
-  delay(1000);
-  FastLED.clear();
-  FastLED.show();
-}
 //------------------------REST---------------------------------------------------------------------------
 
 
