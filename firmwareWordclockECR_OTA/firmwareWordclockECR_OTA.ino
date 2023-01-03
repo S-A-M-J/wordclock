@@ -96,6 +96,7 @@ void setupOTA() {
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
     OTAactivated = true;
+    Serial.println("ota activated");
   }
 }
 
@@ -279,7 +280,11 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
         FastLED.show();
         delay(10);
       }
-    } else if (strcmp(messagePart, "#test2") == 0) {
+    } else if (strcmp(messagePart, "#OTAOn") == 0) {
+     //add indicator
+      setupOTA();
+    }
+     else if (strcmp(messagePart, "#test2") == 0) {
       FastLED.clear();
       FastLED.show();
       setUhrfarbe(255, 255, 255);
