@@ -217,9 +217,10 @@ void setWord(uint8_t wordLeds[], boolean indice) {
 
 void displayOneSec() {
   FastLED.show();
-  delay(1000);
-  //FastLED.clear();
+  delay(900);
+  FastLED.clear();
   FastLED.show();
+  delay(100);
 }
 
 //------------------------BLUETOOTH_CALLBACK---------------------------------------------------------------------------
