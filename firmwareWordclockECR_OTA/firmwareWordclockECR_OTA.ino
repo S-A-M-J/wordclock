@@ -249,8 +249,11 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
       Serial.print("password: ");
       Serial.println(messagePart);
       wifiConfigured = true;
-      preferences.remove("ssid");
-      preferences.remove("password");
+      preferences.clear();
+      preferences.end();
+      preferences.begin("credentials", false);
+      //preferences.remove("ssid");
+      //preferences.remove("password");
       preferences.putString("ssid", ssid);
       preferences.putString("password", password);
       preferences.end();
@@ -558,7 +561,7 @@ void setup() {
   pServer->getAdvertising()->start();
   Serial.println("Waiting a client connection to notify...");
   advertising = true;
-  //---------------------------SETUP_LOOP-----------------------
+  //---------------------------SETUP_LOOP----------------------------------------------------------------------
   int i = 0;
   long blinkTimer = 0;
   while (1) {
@@ -599,6 +602,7 @@ void setup() {
         if (millis() - wifiTimeOutTimer > 3000) {
           wordclockRxCharacteristic.setValue("wifiFailed");
           wordclockRxCharacteristic.notify();
+          Serial.println("wifi failed");
           wifiConfigured = false;
           break;
         }
