@@ -276,7 +276,7 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
       //setClockColor(125, 255, 255);
       for(int i=0; i<sizeof(allWords)/sizeof(allWords[0]);i++){
         setWord(allWords[i]);
-        displayOneSecond();
+        displayOneSec();
       }
     } else if (strcmp(messagePart, "#param") == 0) {
       if (WiFi.status() == WL_CONNECTED) {
