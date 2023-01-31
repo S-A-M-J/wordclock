@@ -27,5 +27,5 @@ uint8_t half[] = { 4, 68 };
 
 uint8_t oclock[] = { 6, 6 };
 uint8_t cornerLeds[] = { 0, 113, 101, 12 };
-uint8_t* hourArray[] = {twelve, one, two, three, four, six, seven, eight, nine, ten, eleven, twelve };
+uint8_t* hourArray[] = {twelve, one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve };
 uint8_t* allWords[] = { one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, fiveMinutes, tenMinutes, quarter, twenty, half, to, past, it, is, oclock };

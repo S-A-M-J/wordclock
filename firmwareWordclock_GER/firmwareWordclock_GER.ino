@@ -18,11 +18,9 @@ ESP32Time rtc(0);
 
 #include <ArduinoOTA.h>
 
-#include <ledData.h>
+#include "ledData.h"
 
 Preferences preferences;
-
-void worclockAlexaChanged(uint8_t brightness);
 
 #define NUM_LEDS 114
 #define DATA_PIN 4
@@ -46,7 +44,6 @@ bool alexaActivated = false;
 bool notify = false;
 char ssid[64] = {};
 char password[64] = {};
-char alexa[8] = {};
 bool alexaActivatedInitial = true;
 bool OTAactivated = false;
 
@@ -146,9 +143,6 @@ struct currentTime {
   uint8_t seconds;
 };
 
-//German definition------------------------------------------------------------------
-
-
 bool clockON = true;
 bool debouncer = false;
 bool debouncerTouch = false;
@@ -223,11 +217,9 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
       Serial.print("password: ");
       Serial.println(messagePart);
       wifiConfigured = true;
-      preferences.clear();
-      preferences.end();
       preferences.begin("credentials", false);
-      //preferences.remove("ssid");
-      //preferences.remove("password");
+      preferences.remove("ssid");
+      preferences.remove("password");
       preferences.putString("ssid", ssid);
       preferences.putString("password", password);
       preferences.end();
@@ -240,17 +232,23 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
       if (alexaActivatedInitial) {
         espalexa.addDevice("wortuhr", colorLightChanged, EspalexaDeviceType::color);
         espalexa.begin();
-        preferences.remove("alexa");
-        preferences.putString("alexa", "on");
       }
+      preferences.begin("alexaSettings",false);
+      preferences.remove("status");
+      preferences.putBool("status", true);
+      preferences.end();
       alexaActivatedInitial = false;
     } else if (strcmp(messagePart, "#alexaOff") == 0) {
       alexaActivated = false;
-      preferences.remove("alexa");
-      preferences.putString("alexa", "off");
-      if (!alexaActivatedInitial) {
-      }
+      preferences.begin("alexaSettings",false);
+      preferences.remove("status");
+      preferences.putBool("status", true);
+      preferences.end();
     } else if (strcmp(messagePart, "#reset") == 0) {
+      preferences.begin("credentials", false);
+      preferences.clear();
+      preferences.end();
+      preferences.begin("alexaSettings", false);
       preferences.clear();
       preferences.end();
       ESP.restart();
@@ -271,58 +269,15 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
      //add indicator
       setupOTA();
     }
-     else if (strcmp(messagePart, "#test2") == 0) {
+      else if (strcmp(messagePart, "#test2") == 0) {
       //clockON = false;
       FastLED.clear();
       FastLED.show();
-      //setUhrfarbe(125, 255, 255);
-      setWord(es);
-      displayOneSec();
-      setWord(ist);
-      displayOneSec();
-      setWord(fuenfMin);
-      displayOneSec();
-      setWord(zehnMin);
-      displayOneSec();
-      setWord(viertel);
-      displayOneSec();
-      setWord(zwanzig);
-      displayOneSec();
-      setWord(halb);
-      displayOneSec();
-      setWord(vor);
-      displayOneSec();
-      setWord(nach);
-      displayOneSec();
-      setWord(ein);
-      displayOneSec();
-      setWord(eins);
-      displayOneSec();
-      setWord(zwei);
-      displayOneSec();
-      setWord(drei);
-      displayOneSec();
-      setWord(vier);
-      displayOneSec();
-      setWord(fuenf);
-      displayOneSec();
-      setWord(sechs);
-      displayOneSec();
-      setWord(sieben);
-      displayOneSec();
-      setWord(acht);
-      displayOneSec();
-      setWord(neun);
-      displayOneSec();
-      setWord(zehn);
-      displayOneSec();
-      setWord(elf);
-      displayOneSec();
-      setWord(zwoelf);
-      displayOneSec();
-      setWord(uhr);
-      displayOneSec();
-      //clockON = true;
+      //setClockColor(125, 255, 255);
+      for(int i=0; i<sizeof(allWords)/sizeof(allWords[0]);i++){
+        setWord(allWords[i]);
+        displayOneSecond();
+      }
     } else if (strcmp(messagePart, "#param") == 0) {
       if (WiFi.status() == WL_CONNECTED) {
         char value[64] = "stat,co,";
@@ -333,6 +288,12 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
         strcat(value, ssid);
         strcat(value, ",");
         strcat(value, ip.toString().c_str());
+        strcat(value, ",");
+        if(alexaActivated){
+          strcat(value, "On");
+        } else {
+          strcat(value, "Off");
+        }
         wordclockRxCharacteristic.setValue(value);
         wordclockRxCharacteristic.notify();
       }
@@ -481,24 +442,22 @@ void setup() {
   Serial.begin(115200);
   preferences.begin("credentials", false);
   String readout = preferences.getString("ssid", "");
-  //add alexa preferences readout
   strcpy(ssid, readout.c_str());
   if (ssid[0] != '\0') {
     wifiConfigured = true;
     readout = preferences.getString("password", "");
+    preferences.end();
     strcpy(password, readout.c_str());
     noCredentialsFound = false;
-    readout = preferences.getString("alexa", "");
-    strcpy(alexa, readout.c_str());
-    if (strcmp(alexa, "on") == 0) {
-      alexaActivated = true;
+    preferences.begin("alexaSettings",true);
+    alexaActivated = preferences.getBool("alexa", false);
+    preferences.end();
+    if (alexaActivated) {
       if (alexaActivatedInitial) {
         espalexa.addDevice("wortuhr", colorLightChanged, EspalexaDeviceType::color);
         espalexa.begin();
-        preferences.remove("alexa");
-        preferences.putString("alexa", "on");
+        alexaActivatedInitial = false;
       }
-      alexaActivatedInitial = false;
     }
   } else {
     wifiConfigured = false;
@@ -507,6 +466,7 @@ void setup() {
   if (wifiConfigured) {
     Serial.println(ssid);
     Serial.println(password);
+    Serial.println(alexaActivated);
   }
 
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
@@ -593,6 +553,12 @@ void setup() {
         strcat(value, ssid);
         strcat(value, ",");
         strcat(value, ip.toString().c_str());
+        strcat(value, ",");
+       if(alexaActivated){
+          strcat(value, "On");
+        } else {
+          strcat(value, "Off");
+        }
         wordclockRxCharacteristic.setValue(value);
         wordclockRxCharacteristic.notify();
         setUhrfarbe(96, 255, 255);
@@ -688,47 +654,12 @@ void loop() {
           t.hours = t.hours + 1;
         }
         t.hours = t.hours % 12;
-        switch (t.hours) {
-          case 1:
-            if (t.minutes >= 5) {
-              setWord(eins);
-            } else {
-              setWord(ein);
-            }
-            break;
-          case 2:
-            setWord(zwei);
-            break;
-          case 3:
-            setWord(drei);
-            break;
-          case 4:
-            setWord(vier);
-            break;
-          case 5:
-            setWord(fuenf);
-            break;
-          case 6:
-            setWord(sechs);
-            break;
-          case 7:
-            setWord(sieben);
-            break;
-          case 8:
-            setWord(acht);
-            break;
-          case 9:
-            setWord(neun);
-            break;
-          case 10:
-            setWord(zehn);
-            break;
-          case 11:
-            setWord(elf);
-            break;
-          case 0:
-            setWord(zwoelf);
-            break;
+        setWord(hourArray[t.hours]);
+
+        if(t.hours == 2){
+          if(t.minutes > 5){
+            setWord(eins);
+          }
         }
 
         //es ist x "UHR" minuten
