@@ -527,6 +527,8 @@ void setup() {
         setUhrfarbe(0, 0, 0);
         setWord(uhrleds, false);
         FastLED.show();
+        wordclockRxCharacteristic.setValue("wifiNotConfigured");
+        wordclockRxCharacteristic.notify();
       }
     }
     if (wifiConfigured) {
@@ -539,7 +541,7 @@ void setup() {
         if (millis() - wifiTimeOutTimer > 3000) {
           wordclockRxCharacteristic.setValue("wifiFailed");
           wordclockRxCharacteristic.notify();
-          Serial.println("wifi failed");
+          Serial.println("wifiFailed");
           wifiConfigured = false;
           break;
         }
