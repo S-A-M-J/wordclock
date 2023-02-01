@@ -262,13 +262,23 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
       Serial.println("Parameters sent");
       if (WiFi.status() == WL_CONNECTED) {
         sendBLEData();
-      } else {
+      } else if (wifiConfigured) {
         wordclockRxCharacteristic.setValue("wifiFailed");
         wordclockRxCharacteristic.notify();
+      } else {
+        wordclockRxCharacteristic.setValue("wifiNotConfigured");
+        wordclockRxCharacteristic.notify();
       }
-      updateCorners = true;
-      updateWords = true;
+    } else if (strcmp(messagePart, "#debug") == 0) {
+      char value[64] = "debug,";
+      strcat(value, ssid);
+      strcat(value, ",");
+      strcat(value, password);
+      wordclockRxCharacteristic.setValue(value);
+      wordclockRxCharacteristic.notify();
     }
+    updateCorners = true;
+    updateWords = true;
   }
 };
 
@@ -454,9 +464,9 @@ void sendBLEData() {
 void setup() {
   Serial.begin(115200);
   preferences.begin("credentials", false);
-  String readout = preferences.getString("ssid", "");
+  String readout = preferences.getString("ssid", " ");
   strcpy(ssid, readout.c_str());
-  if (ssid[0] != '\0') {
+  if (ssid[0] != ' ') {
     wifiConfigured = true;
     readout = preferences.getString("password", "");
     preferences.end();
@@ -527,8 +537,6 @@ void setup() {
         setUhrfarbe(0, 0, 0);
         setWord(uhrleds, false);
         FastLED.show();
-        wordclockRxCharacteristic.setValue("wifiNotConfigured");
-        wordclockRxCharacteristic.notify();
       }
     }
     if (wifiConfigured) {
@@ -579,7 +587,7 @@ void setup() {
   IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
   Serial.println("loop begins");
   preferences.begin("color", true);
-  uhrfarbe.h = preferences.getInt("hue",  0);
+  uhrfarbe.h = preferences.getInt("hue", 0);
   uhrfarbe.s = preferences.putInt("sat", 255);
   uhrfarbe.b = preferences.putInt("bri", 255);
   preferences.end();
@@ -592,11 +600,10 @@ void loop() {
     WiFi.reconnect();
   }
   if (wifiTimerActive) {
-    if(WiFi.status() == WL_CONNECTED){
+    if (WiFi.status() == WL_CONNECTED) {
       wifiTimerActive = false;
       wifiTimeOutTimer = 0;
-    }
-    else if (millis() - wifiTimeOutTimer > 10000 && wifiTimeOutTimer != 0) {
+    } else if (millis() - wifiTimeOutTimer > 10000 && wifiTimeOutTimer != 0) {
       preferences.begin("color", false);
       preferences.putInt("hue", uhrfarbe.h);
       preferences.putInt("sat", uhrfarbe.s);
