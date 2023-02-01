@@ -276,6 +276,8 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
       strcat(value, password);
       wordclockRxCharacteristic.setValue(value);
       wordclockRxCharacteristic.notify();
+    } else if (strcmp(messagePart, "#setColor") == 0) {
+      
     }
     updateCorners = true;
     updateWords = true;
