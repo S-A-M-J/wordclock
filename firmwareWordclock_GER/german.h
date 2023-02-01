@@ -1,4 +1,5 @@
 
+
 //-------------------------German definition-----------------------------------------
 
 uint8_t vor[] = { 3, 74 };
@@ -29,6 +30,7 @@ uint8_t halb[] = { 4, 64 };
 
 uint8_t uhr[] = { 3, 9 };
 uint8_t uhrleds[] = { 0, 113, 101, 12 };
-uint8_t* hourArray[] = {zwoelf, eins, zwei, drei, vier, fuenf, sechs, sieben, acht, neun, zehn, elf };
+uint8_t* hourArray[] = { zwoelf, eins, zwei, drei, vier, fuenf, sechs, sieben, acht, neun, zehn, elf };
 uint8_t* allWords[] = { ein, zwei, drei, vier, fuenf, sechs, sieben, acht, neun, zehn, elf, zwoelf, fuenfMin, zehnMin, viertel, zwanzig, halb, vor, nach, es, ist, uhr };
 //----------------------------------------------------------------------------
+
