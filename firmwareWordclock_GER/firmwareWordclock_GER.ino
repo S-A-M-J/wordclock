@@ -139,6 +139,9 @@ class MyServerCallbacks : public BLEServerCallbacks {
   void onDisconnect(BLEServer* pServer) {
     deviceConnected = false;
     Serial.println("BLE disconnected");
+    pServer->getAdvertising()->start();
+    Serial.println("Waiting a client connection to notify...");
+    advertising = true;
   }
 };
 
