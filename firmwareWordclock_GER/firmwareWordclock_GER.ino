@@ -277,7 +277,17 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
       wordclockRxCharacteristic.setValue(value);
       wordclockRxCharacteristic.notify();
     } else if (strcmp(messagePart, "#setColor") == 0) {
-      
+      char value[16] = {};
+      messagePart = strtok(NULL, delimiter);
+      Serial.println(messagePart);
+      memcpy(value, messagePart, strlen(messagePart));
+      uhrfarbe.h = atoi(value);
+      messagePart = strtok(NULL, delimiter);
+      memcpy(value, messagePart, strlen(messagePart));
+      uhrfarbe.s = atoi(value);
+      messagePart = strtok(NULL, delimiter);
+      memcpy(value, messagePart, strlen(messagePart));
+      uhrfarbe.b = atoi(value);
     }
     updateCorners = true;
     updateWords = true;
