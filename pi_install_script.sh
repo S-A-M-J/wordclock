@@ -6,7 +6,7 @@ echo "updating packages..."
 sudo apt-get update && sudo apt-get upgrade -y
 echo "installing node-red..."
 curl -sL https://raw.githubusercontent.com/node-red/linux-installers/master/deb/update-nodejs-and-nodered >tmp.sh
-sudo -u pi bash tmp.sh --confirm-install --confirm-pi
+sudo -u pi bash tmp.sh --confirm-install --confirm-pi --nodered-user=pi
 sudo rm tmp.sh
 cd
 cd /home/pi/.node-red
@@ -27,21 +27,24 @@ echo iptables-persistent iptables-persistent/autosave_v6 boolean true | sudo deb
 sudo apt-get -y install iptables-persistent
 
 sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-port 8980
-sudo /sbin/iptables-save > /etc/iptables/rules.v4
-sudo /sbin/iptables-save > /etc/iptables/rules.v4
+sudo bash -c "iptables-save > /etc/iptables/rules.v4"
+sudo bash -c "ip6tables-save  > /etc/iptables/rules.v6"
+
 
 cd
+mkdir /home/pi/wordclock
 cd /home/pi/wordclock
-sudo curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/changeToWifi.sh >changeToWifi.sh
-sudo curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/changeToAp.sh >changeToAp.sh
+sudo curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/changeToWifi.sh >changeToWifi.sh
+sudo curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/changeToAp.sh >changeToAp.sh
 
 cd
 echo "downloading github files..."
 cd /home/pi
-curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/pull_update_script.sh >pull-update.sh
+curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/pull_update_script.sh >pull-update.sh
 echo "creating hotspot and wlan services"
 cd
-curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \-O https://api.github.com/repos/S-A-M-J/wordclock/contents/setup_wlan_and_AP_modes.sh
+curl \-H 'Authorization: Bearer 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
+' \-H 'Accept: application/vnd.github.v3.raw' \-O https://api.github.com/repos/S-A-M-J/wordclock/contents/setup_wlan_and_AP_modes.sh
 sudo bash setup_wlan_and_AP_modes.sh -s KamelZuVermieten -p 1235813213455.81 -a WordclockNet -r WCKey2580 -d
 echo "installing change scripts...."
 echo "please reboot now by entering sudo reboot now"
