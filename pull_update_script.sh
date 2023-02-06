@@ -11,15 +11,15 @@ echo "Updating python files from github..."
 echo "downloading new files..."
 cd
 cd /home/pi/wordclock
-sudo curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/changeToWifi.sh >changeToWifi.sh
-sudo curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/changeToAp.sh >changeToAp.sh
-sudo curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/wordclock.py >wordclock.py 
+sudo curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/changeToWifi.sh >changeToWifi.sh
+sudo curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/changeToAp.sh >changeToAp.sh
+sudo curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/wordclock.py >wordclock.py 
 cd
 echo "downloading flow file..."
 cd /home/pi/.node-red
 sudo rm flows.json
 cd
-curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/node-red-flows-wordclock.json >flows.json
+curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/node-red-flows-wordclock.json >flows.json
 
 sudo touch flows.json
 sudo mv flows.json /home/pi/.node-red/flows.json
