@@ -7,7 +7,6 @@
 
 #include <WiFi.h>
 #include "time.h"
-#include <FastLED.h>
 #include <ESP32Time.h>
 ESP32Time rtc(0);
 #include <Arduino.h>
@@ -18,17 +17,31 @@ ESP32Time rtc(0);
 
 #include <ArduinoOTA.h>
 
-#include "ledData.h"
+//#define language "english"  //comment out if german
+#ifdef language
+#include "english.h"
+#else
+#include "german.h"
+#define language "german"
+#endif
 
-Preferences preferences;
 
-void worclockAlexaChanged(uint8_t brightness);
+#include <FastLED.h>
 
 #define NUM_LEDS 114
 #define DATA_PIN 4
 #define CLOCK_PIN 10
-#define TOUCH_PIN 5
+
+struct color {
+  byte h;
+  byte s;
+  byte b;
+};
+
+Preferences preferences;
+
 #define IR_RECEIVE_PIN 33
+#define TOUCH_PIN 5
 
 // See the following for generating UUIDs:
 // https://www.uuidgenerator.net/
@@ -46,17 +59,17 @@ bool alexaActivated = false;
 bool notify = false;
 char ssid[64] = {};
 char password[64] = {};
-char alexa[8] = {};
 bool alexaActivatedInitial = true;
 bool OTAactivated = false;
-
+bool updateCorners = true;
+bool updateWords = true;
+bool clockON = true;
+bool wifiTimerActive = false;
 
 long wifiTimeOutTimer = 0;
 
 IPAddress ip;
-char ipString[20]={};
-// Define the array of leds
-CRGB leds[NUM_LEDS];
+char ipString[20] = {};
 
 Espalexa espalexa;
 
@@ -126,6 +139,9 @@ class MyServerCallbacks : public BLEServerCallbacks {
   void onDisconnect(BLEServer* pServer) {
     deviceConnected = false;
     Serial.println("BLE disconnected");
+    pServer->getAdvertising()->start();
+    Serial.println("Waiting a client connection to notify...");
+    advertising = true;
   }
 };
 
@@ -134,68 +150,27 @@ const char* ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 3600;
 const int daylightOffset_sec = 3600;
 
-struct color {
-  byte h;
-  byte s;
-  byte b;
-};
-
 struct currentTime {
   uint8_t hours;
   uint8_t minutes;
   uint8_t seconds;
 };
 
-//German definition------------------------------------------------------------------
-
-
-bool clockON = true;
 bool debouncer = false;
 bool debouncerTouch = false;
-bool updateCorners = true;
-bool updateWords = true;
 bool updateTime = true;
 bool partyMode = false;
 
-
-
-color clockColor = { 125, 255, 255 };
 currentTime t = { 0, 0 };
 struct tm timeinfo;
 
+// Define the array of leds
+CRGB leds[NUM_LEDS];
 
-
-void setClockColor(byte hue, byte saturation, byte brightness) {
-  clockColor.h = hue;
-  clockColor.s = saturation;
-  clockColor.b = brightness;
-}
-
+color uhrfarbe = { 125, 255, 255 };
 
 //prototype
 void setWord(uint8_t wordLeds[], boolean indice = true);
-void setWord(uint8_t wordLeds[], boolean indice) {
-  if (indice) {
-    for (int i = 0; i < wordLeds[0]; i++) {
-      leds[wordLeds[1] + i] = CHSV(clockColor.h, clockColor.s, clockColor.b);
-      //Serial.println(wordLeds[1] + i);
-      //Serial.println("indice true");
-    }
-  } else {
-    for (int i = 0; i < sizeof(wordLeds) / sizeof(uint8_t); i++) {
-      leds[wordLeds[i]] = CHSV(clockColor.h, clockColor.s, clockColor.b);
-      //Serial.println(wordLeds[i]);
-    }
-  }
-}
-
-void displayOneSecond() {
-  FastLED.show();
-  delay(900);
-  FastLED.clear();
-  FastLED.show();
-  delay(100);
-}
 
 //------------------------BLUETOOTH_CALLBACK---------------------------------------------------------------------------
 class incomingCallbackHandler : public BLECharacteristicCallbacks {
@@ -223,15 +198,16 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
       Serial.print("password: ");
       Serial.println(messagePart);
       wifiConfigured = true;
-      preferences.clear();
-      preferences.end();
       preferences.begin("credentials", false);
-      //preferences.remove("ssid");
-      //preferences.remove("password");
+      preferences.remove("ssid");
+      preferences.remove("password");
       preferences.putString("ssid", ssid);
       preferences.putString("password", password);
       preferences.end();
-      ESP.restart();
+      if (WiFi.status() == WL_CONNECTED) {
+        WiFi.disconnect();
+      }
+      WiFi.begin(ssid, password);
     } else if (strcmp(messagePart, "#kill") == 0) {
       delay(2000);
       ESP.restart();
@@ -240,17 +216,23 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
       if (alexaActivatedInitial) {
         espalexa.addDevice("wortuhr", colorLightChanged, EspalexaDeviceType::color);
         espalexa.begin();
-        preferences.remove("alexa");
-        preferences.putString("alexa", "on");
       }
+      preferences.begin("alexaSettings", false);
+      preferences.remove("status");
+      preferences.putBool("status", true);
+      preferences.end();
       alexaActivatedInitial = false;
     } else if (strcmp(messagePart, "#alexaOff") == 0) {
       alexaActivated = false;
-      preferences.remove("alexa");
-      preferences.putString("alexa", "off");
-      if (!alexaActivatedInitial) {
-      }
+      preferences.begin("alexaSettings", false);
+      preferences.clear();
+      preferences.putBool("status", false);
+      preferences.end();
     } else if (strcmp(messagePart, "#reset") == 0) {
+      preferences.begin("credentials", false);
+      preferences.clear();
+      preferences.end();
+      preferences.begin("alexaSettings", false);
       preferences.clear();
       preferences.end();
       ESP.restart();
@@ -268,37 +250,168 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
       }
       //clockON = true;
     } else if (strcmp(messagePart, "#OTAOn") == 0) {
-     //add indicator
+      //add indicator
       setupOTA();
-    }
-     else if (strcmp(messagePart, "#test2") == 0) {
+    } else if (strcmp(messagePart, "#test2") == 0) {
       //clockON = false;
       FastLED.clear();
       FastLED.show();
       //setClockColor(125, 255, 255);
-      for(int i=0; i<sizeof(allWords)/sizeof(allWords[0]);i++){
+      for (int i = 0; i < sizeof(allWords) / sizeof(allWords[0]); i++) {
         setWord(allWords[i]);
-        displayOneSecond();
+        displayOneSec();
       }
     } else if (strcmp(messagePart, "#param") == 0) {
+      Serial.println("Parameters sent");
       if (WiFi.status() == WL_CONNECTED) {
-        char value[64] = "stat,co,";
-        wordclockRxCharacteristic.setValue(value);
+        sendBLEData();
+      } else if (wifiConfigured) {
+        wordclockRxCharacteristic.setValue("wifiFailed");
         wordclockRxCharacteristic.notify();
-        delay(300);
-        strcpy(value, "ssid,");
-        strcat(value, ssid);
-        strcat(value, ",");
-        strcat(value, ip.toString().c_str());
-        wordclockRxCharacteristic.setValue(value);
+      } else {
+        wordclockRxCharacteristic.setValue("wifiNotConfigured");
         wordclockRxCharacteristic.notify();
       }
+    } else if (strcmp(messagePart, "#debug") == 0) {
+      char value[64] = "debug,";
+      strcat(value, ssid);
+      strcat(value, ",");
+      strcat(value, password);
+      wordclockRxCharacteristic.setValue(value);
+      wordclockRxCharacteristic.notify();
+    } else if (strcmp(messagePart, "#setColor") == 0) {
+      char value[16] = {};
+      messagePart = strtok(NULL, delimiter);
+      Serial.println(messagePart);
+      memcpy(value, messagePart, strlen(messagePart));
+      uhrfarbe.h = atoi(value);
+      messagePart = strtok(NULL, delimiter);
+      memcpy(value, messagePart, strlen(messagePart));
+      uhrfarbe.s = atoi(value);
+      messagePart = strtok(NULL, delimiter);
+      memcpy(value, messagePart, strlen(messagePart));
+      uhrfarbe.b = atoi(value);
     }
     updateCorners = true;
     updateWords = true;
   }
 };
 
+//-----------------------LED HANDLING------------------------------------------------------------------
+
+
+void setUhrfarbe(byte hue, byte saturation, byte brightness) {
+  uhrfarbe.h = hue;
+  uhrfarbe.s = saturation;
+  uhrfarbe.b = brightness;
+}
+
+void setWord(uint8_t wordLeds[], boolean indice) {
+  if (indice) {
+    for (int i = 0; i < wordLeds[0]; i++) {
+      leds[wordLeds[1] + i] = CHSV(uhrfarbe.h, uhrfarbe.s, uhrfarbe.b);
+      //Serial.println(wordLeds[1] + i);
+      //Serial.println("indice true");
+    }
+  } else {
+    for (int i = 0; i < sizeof(wordLeds) / sizeof(uint8_t); i++) {
+      leds[wordLeds[i]] = CHSV(uhrfarbe.h, uhrfarbe.s, uhrfarbe.b);
+      //Serial.println(wordLeds[i]);
+    }
+  }
+}
+
+void displayOneSec() {
+  FastLED.show();
+  delay(900);
+  FastLED.clear();
+  FastLED.show();
+  delay(100);
+}
+
+//-----------------------IR----------------------------------------------------------------------------
+
+void handleIRCommand(uint8_t cmd) {
+  //Serial.println(cmd);
+  switch (cmd) {
+    case 0:
+      if (uhrfarbe.b < 245) {
+        uhrfarbe.b = uhrfarbe.b + 10;
+      }
+      break;
+    case 1:
+      if (uhrfarbe.b > 20) {
+        uhrfarbe.b = uhrfarbe.b - 10;
+      }
+      break;
+    case 2:
+      clockON = false;
+      break;
+    case 3:
+      clockON = true;
+      break;
+    case 4:  //red
+      setUhrfarbe(0, 255, 255);
+      break;
+    case 5:  //green
+      setUhrfarbe(96, 255, 255);
+      break;
+    case 6:  //blue
+      setUhrfarbe(160, 255, 255);
+      break;
+    case 7:  //white
+      setUhrfarbe(0, 0, 255);
+      break;
+    case 8:  //orange
+      setUhrfarbe(32, 255, 255);
+      break;
+    case 9:  //light green
+      setUhrfarbe(105, 255, 255);
+      break;
+    case 10:  //light blue
+      setUhrfarbe(175, 255, 255);
+      break;
+    case 11:  //flash
+      break;
+    case 12:  //light orange
+      setUhrfarbe(32, 255, 255);
+      break;
+    case 13:  //aqua
+      setUhrfarbe(128, 255, 255);
+      break;
+    case 14:  //purple
+      setUhrfarbe(192, 255, 255);
+      break;
+    case 15:  //strobe
+
+      break;
+    case 16:  //very light orange
+      setUhrfarbe(32, 255, 255);
+      break;
+    case 17:  //marine
+      setUhrfarbe(140, 255, 255);
+      break;
+    case 18:  //light purple
+      setUhrfarbe(192, 200, 255);
+      break;
+    case 19:  //fade
+              //
+      break;
+    case 20:  //yellow
+      setUhrfarbe(64, 255, 255);
+      break;
+    case 21:  //dark aqua
+      setUhrfarbe(150, 255, 150);
+      break;
+    case 22:  //pink
+      setUhrfarbe(224, 255, 255);
+      break;
+    case 23:  //smooth
+              //
+      break;
+  }
+  //Serial.println("handled IR Command");
+}
 
 //------------------------REST---------------------------------------------------------------------------
 
@@ -309,103 +422,16 @@ void colorLightChanged(EspalexaDevice* d) {
   if (d == nullptr) return;
   clockON = d->getState();
   Serial.printf("%d , %d ,%d\n", d->getPercent(), d->getHue(), d->getSat());
-  clockColor.b = d->getPercent() * 2, 55;
-  clockColor.h = d->getHue() / 255;
-  clockColor.s = d->getSat();
+  uhrfarbe.b = d->getPercent() * 2, 55;
+  uhrfarbe.h = d->getHue() / 255;
+  uhrfarbe.s = d->getSat();
   //Serial.println(d->getColorMode());
   updateWords = true;
   updateCorners = true;
 }
 
 
-void handleIRCommand(uint8_t cmd) {
-  //Serial.println(cmd);
-  switch (cmd) {
-    case 0:
-      if (clockColor.b < 245) {
-        clockColor.b = clockColor.b + 10;
-      }
-      break;
-    case 1:
-      if (clockColor.b > 20) {
-        clockColor.b = clockColor.b - 10;
-      }
-      break;
-    case 2:
-      clockON = false;
-      break;
-    case 3:
-      clockON = true;
-      break;
-    case 4:  //red
-      setClockColor(0, 255, 255);
-      break;
-    case 5:  //green
-      setClockColor(96, 255, 255);
-      break;
-    case 6:  //blue
-      setClockColor(160, 255, 255);
-      break;
-    case 7:  //white
-      setClockColor(0, 0, 255);
-      break;
-    case 8:  //orange
-      setClockColor(32, 255, 255);
-      break;
-    case 9:  //light green
-      setClockColor(105, 255, 255);
-      break;
-    case 10:  //light blue
-      setClockColor(175, 255, 255);
-      break;
-    case 11:  //flash
-      if (partyMode) {
-        partyMode = false;
-        updateWords = true;
-        updateCorners = true;
-      } else {
-        partyMode = true;
-      }
-      break;
-    case 12:  //light orange
-      setClockColor(32, 255, 255);
-      break;
-    case 13:  //aqua
-      setClockColor(128, 255, 255);
-      break;
-    case 14:  //purple
-      setClockColor(192, 255, 255);
-      break;
-    case 15:  //strobe
 
-      break;
-    case 16:  //very light orange
-      setClockColor(32, 255, 255);
-      break;
-    case 17:  //marine
-      setClockColor(140, 255, 255);
-      break;
-    case 18:  //light purple
-      setClockColor(192, 200, 255);
-      break;
-    case 19:  //fade
-              //
-      break;
-    case 20:  //yellow
-      setClockColor(64, 255, 255);
-      break;
-    case 21:  //dark aqua
-      setClockColor(150, 255, 150);
-      break;
-    case 22:  //pink
-      setClockColor(224, 255, 255);
-      break;
-    case 23:  //smooth
-              //
-      break;
-  }
-  //Serial.println("handled IR Command");
-}
 
 void IRAM_ATTR TOUCH_ISR() {
   if (clockON) {
@@ -433,30 +459,34 @@ void updateRTC() {
   struct tm timeinfo;
 }
 
+void sendBLEData() {
+  char value[64] = "stat,co,";
+  strcat(value, ssid);
+  strcat(value, ",");
+  ip = WiFi.localIP();
+  strcat(value, ip.toString().c_str());
+  strcat(value, ",");
+  if (alexaActivated) {
+    strcat(value, "on");
+  } else {
+    strcat(value, "off");
+  }
+  wordclockRxCharacteristic.setValue(value);
+  wordclockRxCharacteristic.notify();
+}
+
 //------------------------SETUP---------------------------------------------------------------------------
 void setup() {
   Serial.begin(115200);
   preferences.begin("credentials", false);
-  String readout = preferences.getString("ssid", "");
-  //add alexa preferences readout
+  String readout = preferences.getString("ssid", " ");
   strcpy(ssid, readout.c_str());
-  if (ssid[0] != '\0') {
+  if (ssid[0] != ' ') {
     wifiConfigured = true;
     readout = preferences.getString("password", "");
+    preferences.end();
     strcpy(password, readout.c_str());
     noCredentialsFound = false;
-    readout = preferences.getString("alexa", "");
-    strcpy(alexa, readout.c_str());
-    if (strcmp(alexa, "on") == 0) {
-      alexaActivated = true;
-      if (alexaActivatedInitial) {
-        espalexa.addDevice("wortuhr", colorLightChanged, EspalexaDeviceType::color);
-        espalexa.begin();
-        preferences.remove("alexa");
-        preferences.putString("alexa", "on");
-      }
-      alexaActivatedInitial = false;
-    }
   } else {
     wifiConfigured = false;
     noCredentialsFound = true;
@@ -464,6 +494,7 @@ void setup() {
   if (wifiConfigured) {
     Serial.println(ssid);
     Serial.println(password);
+    Serial.println(alexaActivated);
   }
 
   FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);
@@ -497,11 +528,11 @@ void setup() {
   long blinkTimer = 0;
   while (1) {
     if (millis() - blinkTimer > 500) {
-      leds[cornerLeds[i]] = CHSV(0, 0, 255);
+      leds[uhrleds[i]] = CHSV(0, 0, 255);
       if (i > 0) {
-        leds[cornerLeds[i - 1]] = CHSV(0, 0, 0);
+        leds[uhrleds[i - 1]] = CHSV(0, 0, 0);
       } else {
-        leds[cornerLeds[3]] = CHSV(0, 0, 0);
+        leds[uhrleds[3]] = CHSV(0, 0, 0);
       }
       FastLED.show();
       i++;
@@ -514,12 +545,12 @@ void setup() {
       if (initialBLEConnect) {
         Serial.println("Bluetooth connected");
         initialBLEConnect = false;
-        setClockColor(160, 255, 255);
-        setWord(cornerLeds, false);
+        setUhrfarbe(160, 255, 255);
+        setWord(uhrleds, false);
         FastLED.show();
         delay(1000);
-        setClockColor(0, 0, 0);
-        setWord(cornerLeds, false);
+        setUhrfarbe(0, 0, 0);
+        setWord(uhrleds, false);
         FastLED.show();
       }
     }
@@ -533,32 +564,33 @@ void setup() {
         if (millis() - wifiTimeOutTimer > 3000) {
           wordclockRxCharacteristic.setValue("wifiFailed");
           wordclockRxCharacteristic.notify();
-          Serial.println("wifi failed");
+          Serial.println("wifiFailed");
           wifiConfigured = false;
           break;
         }
       }
       if (WiFi.status() == WL_CONNECTED) {
+        wifiTimeOutTimer = 0;
         Serial.println("WiFi connected.");
         wifiConfigured = false;
-        char value[64] = "stat,co,";
-        ip = WiFi.localIP();
-        wordclockRxCharacteristic.setValue(value);
-        wordclockRxCharacteristic.notify();
-        delay(50);
-        strcpy(value, "ssid,");
-        strcat(value, ssid);
-        strcat(value, ",");
-        strcat(value, ip.toString().c_str());
-        wordclockRxCharacteristic.setValue(value);
-        wordclockRxCharacteristic.notify();
-        setClockColor(96, 255, 255);
-        setWord(cornerLeds, false);
+        sendBLEData();
+        setUhrfarbe(96, 255, 255);
+        setWord(uhrleds, false);
         FastLED.show();
         delay(1000);
-        setClockColor(0, 0, 0);
-        setWord(cornerLeds, false);
+        setUhrfarbe(0, 0, 0);
+        setWord(uhrleds, false);
         FastLED.show();
+        preferences.begin("alexaSettings", false);
+        alexaActivated = preferences.getBool("status", false);
+        preferences.end();
+        if (alexaActivated) {
+          if (alexaActivatedInitial) {
+            espalexa.addDevice("wortuhr", colorLightChanged, EspalexaDeviceType::color);
+            espalexa.begin();
+            alexaActivatedInitial = false;
+          }
+        }
         break;
       }
     }
@@ -569,50 +601,47 @@ void setup() {
   printLocalTime();
   IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
   Serial.println("loop begins");
-  setClockColor(0, 255, 255);
+  preferences.begin("color", true);
+  uhrfarbe.h = preferences.getInt("hue", 0);
+  uhrfarbe.s = preferences.putInt("sat", 255);
+  uhrfarbe.b = preferences.putInt("bri", 255);
+  preferences.end();
 }
 //--------------------LOOP-----------------------------------------
 void loop() {
+  if (WiFi.status() != WL_CONNECTED && !wifiTimerActive) {
+    wifiTimeOutTimer = millis();
+    wifiTimerActive = true;
+    WiFi.reconnect();
+  }
+  if (wifiTimerActive) {
+    if (WiFi.status() == WL_CONNECTED) {
+      wifiTimerActive = false;
+      wifiTimeOutTimer = 0;
+    } else if (millis() - wifiTimeOutTimer > 10000 && wifiTimeOutTimer != 0) {
+      preferences.begin("color", false);
+      preferences.putInt("hue", uhrfarbe.h);
+      preferences.putInt("sat", uhrfarbe.s);
+      preferences.putInt("bri", uhrfarbe.b);
+      preferences.end();
+      Serial.println("Restarting now");
+      ESP.restart();
+    }
+  }
   if (OTAactivated) {
     checkOTA();
   } else {
     if (alexaActivated) {
       espalexa.loop();
     }
-    if (notify) {
-      char value[64] = "stat,co,";
-      wordclockRxCharacteristic.setValue(value);
-      wordclockRxCharacteristic.notify();
-      delay(50);
-      strcpy(value, "ssid,");
-      strcat(value, ssid);
-      wordclockRxCharacteristic.setValue(value);
-      wordclockRxCharacteristic.notify();
-      notify = false;
-    }
     t.hours = rtc.getHour();
     t.minutes = rtc.getMinute();
     t.seconds = rtc.getSecond();
-    //Serial.print(t.hours);
-    //Serial.print(":");
-    //Serial.print(t.minutes);
-    //Serial.print(":");
-    //Serial.println(t.seconds);
     if (IrReceiver.decode()) {
       IrReceiver.resume();  // Enable receiving of the next value
       handleIRCommand(IrReceiver.decodedIRData.command);
       updateWords = true;
       updateCorners = true;
-    }
-    if (partyMode) {
-      FastLED.clear();
-      FastLED.show();
-      for (int i = 0; i < 4; i++) {
-        leds[random(0, 113)] = CHSV(random(0, 255), random(0, 255), clockColor.b);
-      }
-      FastLED.show();
-      delay(200);
-      return;
     }
 
     if (t.seconds == 0 && t.minutes == 0 && updateTime) {
@@ -639,6 +668,77 @@ void loop() {
       int minutedivision = t.minutes % 5;  //modulo 5 für äußere minutenanzeige
       if (updateWords) {
         FastLED.clear();
+        //-------german----------------------------------------------------------------------------------------------
+        /*
+          setWord(es);
+          setWord(ist);
+          if (t.minutes > 24) {
+            t.hours = t.hours + 1;
+          }
+          t.hours = t.hours % 12;
+          //es ist x "UHR" minuten
+          if (t.hours == 2) {
+            if (t.minutes > 5) {
+              setWord(eins);
+            } else {
+              setWord(hourArray[t.hours]);
+            }
+          } else {
+            setWord(hourArray[t.hours]);
+          }
+
+          int minuteStep = t.minutes - minutedivision;
+          switch (minuteStep) {
+            case 5:
+              setWord(nach);
+              setWord(fuenfMin);
+              break;
+            case 10:
+              setWord(nach);
+              setWord(zehnMin);
+              break;
+            case 15:
+              setWord(nach);
+              setWord(viertel);
+              break;
+            case 20:
+              setWord(nach);
+              setWord(zwanzig);
+              break;
+            case 25:
+              setWord(vor);
+              setWord(fuenfMin);
+              setWord(halb);
+              break;
+            case 30:
+              setWord(halb);
+              break;
+            case 35:
+              setWord(nach);
+              setWord(fuenfMin);
+              setWord(halb);
+              break;
+            case 40:
+              setWord(vor);
+              setWord(zwanzig);
+              break;
+            case 45:
+              setWord(vor);
+              setWord(viertel);
+              break;
+            case 50:
+              setWord(vor);
+              setWord(zehnMin);
+              break;
+            case 55:
+              setWord(vor);
+              setWord(fuenfMin);
+              break;
+          }
+          */
+        //-------german end----------------------------------------------------------------------------------------------
+        //-------english-------------------------------------------------------------------------------------------------
+
         setWord(it);
         setWord(is);
         if (t.minutes > 24) {
@@ -672,9 +772,11 @@ void loop() {
           case 25:
             setWord(fiveMinutes);
             setWord(twenty);
+            setWord(past);
             break;
           case 30:
             setWord(half);
+            setWord(past);
             break;
           case 35:
             setWord(past);
@@ -698,17 +800,17 @@ void loop() {
             setWord(fiveMinutes);
             break;
         }
+        //------------------english end--------------------------------------------------------------
+
         updateWords = false;
       }
       if (updateCorners) {
         for (int i = 0; i < minutedivision; i++) {
-          leds[cornerLeds[i]] = CHSV(clockColor.h, clockColor.s, clockColor.b);
+          leds[uhrleds[i]] = CHSV(uhrfarbe.h, uhrfarbe.s, uhrfarbe.b);
         }
         FastLED.show();
         updateCorners = false;
       }
-
-
     } else {
       FastLED.clear();
       FastLED.show();
