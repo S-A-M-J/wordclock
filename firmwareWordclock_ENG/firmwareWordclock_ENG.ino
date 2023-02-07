@@ -17,7 +17,7 @@ ESP32Time rtc(0);
 
 #include <ArduinoOTA.h>
 
-//#define language "english"  //comment out if german
+#define language "english"  //comment out if german
 #ifdef language
 #include "english.h"
 #else
@@ -528,11 +528,11 @@ void setup() {
   long blinkTimer = 0;
   while (1) {
     if (millis() - blinkTimer > 500) {
-      leds[uhrleds[i]] = CHSV(0, 0, 255);
+      leds[cornerLeds[i]] = CHSV(0, 0, 255);
       if (i > 0) {
-        leds[uhrleds[i - 1]] = CHSV(0, 0, 0);
+        leds[cornerLeds[i - 1]] = CHSV(0, 0, 0);
       } else {
-        leds[uhrleds[3]] = CHSV(0, 0, 0);
+        leds[cornerLeds[3]] = CHSV(0, 0, 0);
       }
       FastLED.show();
       i++;
@@ -546,11 +546,11 @@ void setup() {
         Serial.println("Bluetooth connected");
         initialBLEConnect = false;
         setUhrfarbe(160, 255, 255);
-        setWord(uhrleds, false);
+        setWord(cornerLeds, false);
         FastLED.show();
         delay(1000);
         setUhrfarbe(0, 0, 0);
-        setWord(uhrleds, false);
+        setWord(cornerLeds, false);
         FastLED.show();
       }
     }
@@ -575,11 +575,11 @@ void setup() {
         wifiConfigured = false;
         sendBLEData();
         setUhrfarbe(96, 255, 255);
-        setWord(uhrleds, false);
+        setWord(cornerLeds, false);
         FastLED.show();
         delay(1000);
         setUhrfarbe(0, 0, 0);
-        setWord(uhrleds, false);
+        setWord(cornerLeds, false);
         FastLED.show();
         preferences.begin("alexaSettings", false);
         alexaActivated = preferences.getBool("status", false);
@@ -603,8 +603,8 @@ void setup() {
   Serial.println("loop begins");
   preferences.begin("color", true);
   uhrfarbe.h = preferences.getInt("hue", 0);
-  uhrfarbe.s = preferences.putInt("sat", 255);
-  uhrfarbe.b = preferences.putInt("bri", 255);
+  uhrfarbe.s = preferences.getInt("sat", 255);
+  uhrfarbe.b = preferences.getInt("bri", 255);
   preferences.end();
 }
 //--------------------LOOP-----------------------------------------
@@ -779,9 +779,9 @@ void loop() {
             setWord(past);
             break;
           case 35:
-            setWord(past);
+            setWord(to);
             setWord(fiveMinutes);
-            setWord(half);
+            setWord(twenty);
             break;
           case 40:
             setWord(to);
@@ -806,7 +806,7 @@ void loop() {
       }
       if (updateCorners) {
         for (int i = 0; i < minutedivision; i++) {
-          leds[uhrleds[i]] = CHSV(uhrfarbe.h, uhrfarbe.s, uhrfarbe.b);
+          leds[cornerLeds[i]] = CHSV(uhrfarbe.h, uhrfarbe.s, uhrfarbe.b);
         }
         FastLED.show();
         updateCorners = false;
