@@ -4,8 +4,8 @@
 *.d
 
 # Build files
-firmwareWordclockGER/build
-firmwareWordclockENG/build
+firmwareWordclock_GER/build
+firmwareWordclock_ENG/build
 
 # Object files
 *.o
