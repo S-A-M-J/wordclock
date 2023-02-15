@@ -16,6 +16,7 @@ ESP32Time rtc(0);
 #include <Preferences.h>
 
 #include <ArduinoOTA.h>
+#include <wordclock.h>
 
 //#define language "english"  //comment out if german
 #ifdef language
