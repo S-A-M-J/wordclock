@@ -453,10 +453,12 @@ void printLocalTime() {
 }
 
 void updateRTC() {
-  configTime(0, 0, ntpServer);
-  setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
-  tzset();
-  struct tm timeinfo;
+  if (WiFi.status() == WL_CONNECTED) {
+    configTime(0, 0, ntpServer);
+    setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
+    tzset();
+    struct tm timeinfo;
+  }
 }
 
 void sendBLEData() {
@@ -596,7 +598,6 @@ void setup() {
     }
   }
   FastLED.clear();
-
   updateRTC();
   printLocalTime();
   IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
@@ -606,6 +607,9 @@ void setup() {
   uhrfarbe.s = preferences.putInt("sat", 255);
   uhrfarbe.b = preferences.putInt("bri", 255);
   preferences.end();
+  if(uhrfarbe.b == 0){
+    uhrfarbe.b = 255;
+  }
 }
 //--------------------LOOP-----------------------------------------
 void loop() {
