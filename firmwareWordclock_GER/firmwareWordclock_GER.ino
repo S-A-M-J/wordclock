@@ -680,6 +680,9 @@ void loop() {
             t.hours = t.hours + 1;
           }
           t.hours = t.hours % 12;
+          if(t.minutes < 5){
+            setWord(uhr);
+          }
           //es ist x "UHR" minuten
           if (t.hours == 2) {
             if (t.minutes > 5) {
@@ -740,7 +743,7 @@ void loop() {
               break;
           }
           //-------german end----------------------------------------------------------------------------------------------
-        } else if (strcmp(language, "german") == 0) {
+        } else if (strcmp(language, "english") == 0) {
           //-------english-------------------------------------------------------------------------------------------------
           /*
           setWord(it);
