@@ -131,10 +131,8 @@ BLECharacteristic wordclockTxCharacteristic(CHARACTERISTIC_UUID_TX, BLECharacter
 class MyServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer* pServer) {
     deviceConnected = true;
-    //Serial.println("ble connected");
-    if (WiFi.status() == WL_CONNECTED) {
-      notify = true;
-    }
+    Serial.println("ble connected");
+    notify = true;
   }
   void onDisconnect(BLEServer* pServer) {
     deviceConnected = false;
