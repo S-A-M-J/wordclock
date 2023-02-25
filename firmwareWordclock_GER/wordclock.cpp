@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 /*
+=======
+#include <stdint.h>
+>>>>>>> Stashed changes
 #include "german.h"
 #include "english.h"
 #include "Arduino.h"

@@ -1,4 +1,4 @@
-
+#include <stdint.h>
 #ifndef wordclock_h
 #define wordclock_h
 #include "Arduino.h"
