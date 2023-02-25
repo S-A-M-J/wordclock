@@ -1,4 +1,4 @@
-
+/*
 #include "german.h"
 #include "english.h"
 #include "Arduino.h"
@@ -26,4 +26,4 @@ private int* getWordLeds( int startNumber, int numberOfLeds){
 private int* appendIntArray(int* destination, int* data, int dataSize){
     int indexDestination = sizeof(destination)/sizeof(int);
     destination 
-}
+}*/

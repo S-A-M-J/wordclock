@@ -16,7 +16,7 @@ ESP32Time rtc(0);
 #include <Preferences.h>
 
 #include <ArduinoOTA.h>
-#include <wordclock.h>
+//#include <wordclock.h>
 
 //#define language "english"  //comment out if german
 #ifdef language
@@ -73,6 +73,8 @@ IPAddress ip;
 char ipString[20] = {};
 
 Espalexa espalexa;
+
+ uint8_t gHue = 0;
 
 
 //------------------------OTA---------------------------------------------------------------------------
@@ -384,7 +386,7 @@ void handleIRCommand(uint8_t cmd) {
       setUhrfarbe(192, 255, 255);
       break;
     case 15:  //strobe
-
+      fill_rainbow(leds, NUM_LEDS, gHue, 7);
       break;
     case 16:  //very light orange
       setUhrfarbe(32, 255, 255);
@@ -605,16 +607,16 @@ void setup() {
   Serial.println("loop begins");
   preferences.begin("color", true);
   uhrfarbe.h = preferences.getInt("hue", 0);
-  uhrfarbe.s = preferences.putInt("sat", 255);
-  uhrfarbe.b = preferences.putInt("bri", 255);
+  uhrfarbe.s = preferences.getInt("sat", 255);
+  uhrfarbe.b = preferences.getInt("bri", 255);
   preferences.end();
-  if(uhrfarbe.b == 0){
+  if (uhrfarbe.b == 0) {
     uhrfarbe.b = 255;
   }
 }
 //--------------------LOOP-----------------------------------------
 void loop() {
-  if (WiFi.status() != WL_CONNECTED && !wifiTimerActive) {
+  if (WiFi.status() != WL_CONNECTED && !wifiTimerActive && updateTime) {
     wifiTimeOutTimer = millis();
     wifiTimerActive = true;
     WiFi.reconnect();
@@ -659,10 +661,11 @@ void loop() {
     }
 
     if (t.seconds == 0 && !debouncer) {
+      updateWords = true;
       updateCorners = true;
-      if (t.minutes % 5 == 0) {
-        updateWords = true;
-      }
+      //if (t.minutes % 5 == 0) {
+       // updateWords = true;
+      //}
       debouncer = true;
     }
     if (t.seconds != 0 && debouncer) {
@@ -681,13 +684,13 @@ void loop() {
             t.hours = t.hours + 1;
           }
           t.hours = t.hours % 12;
-          if(t.minutes < 5){
+          if (t.minutes < 5) {
             setWord(uhr);
           }
           //es ist x "UHR" minuten
-          if (t.hours == 2) {
-            if (t.minutes > 5) {
-              setWord(eins);
+          if (t.hours == 1) {
+            if (t.minutes < 5) {
+              setWord(ein);
             } else {
               setWord(hourArray[t.hours]);
             }
