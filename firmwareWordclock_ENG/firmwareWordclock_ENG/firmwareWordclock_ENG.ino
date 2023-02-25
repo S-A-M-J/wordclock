@@ -17,7 +17,7 @@ ESP32Time rtc(0);
 
 #include <ArduinoOTA.h>
 
-#define language "english"  //comment out if german
+//#define language "english"  //comment out if german
 #ifdef language
 #include "english.h"
 #else
@@ -131,8 +131,10 @@ BLECharacteristic wordclockTxCharacteristic(CHARACTERISTIC_UUID_TX, BLECharacter
 class MyServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer* pServer) {
     deviceConnected = true;
-    Serial.println("ble connected");
-    notify = true;
+    //Serial.println("ble connected");
+    if (WiFi.status() == WL_CONNECTED) {
+      notify = true;
+    }
   }
   void onDisconnect(BLEServer* pServer) {
     deviceConnected = false;
@@ -451,10 +453,12 @@ void printLocalTime() {
 }
 
 void updateRTC() {
-  configTime(0, 0, ntpServer);
-  setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
-  tzset();
-  struct tm timeinfo;
+  if (WiFi.status() == WL_CONNECTED) {
+    configTime(0, 0, ntpServer);
+    setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
+    tzset();
+    struct tm timeinfo;
+  }
 }
 
 void sendBLEData() {
@@ -594,16 +598,18 @@ void setup() {
     }
   }
   FastLED.clear();
-
   updateRTC();
   printLocalTime();
   IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
   Serial.println("loop begins");
   preferences.begin("color", true);
   uhrfarbe.h = preferences.getInt("hue", 0);
-  uhrfarbe.s = preferences.getInt("sat", 255);
-  uhrfarbe.b = preferences.getInt("bri", 255);
+  uhrfarbe.s = preferences.putInt("sat", 255);
+  uhrfarbe.b = preferences.putInt("bri", 255);
   preferences.end();
+  if(uhrfarbe.b == 0){
+    uhrfarbe.b = 255;
+  }
 }
 //--------------------LOOP-----------------------------------------
 void loop() {
@@ -666,14 +672,17 @@ void loop() {
       int minutedivision = t.minutes % 5;  //modulo 5 für äußere minutenanzeige
       if (updateWords) {
         FastLED.clear();
-        //-------german----------------------------------------------------------------------------------------------
-        /*
+        if (strcmp(language, "german") == 0) {
+          //-------german----------------------------------------------------------------------------------------------
           setWord(es);
           setWord(ist);
           if (t.minutes > 24) {
             t.hours = t.hours + 1;
           }
           t.hours = t.hours % 12;
+          if(t.minutes < 5){
+            setWord(uhr);
+          }
           //es ist x "UHR" minuten
           if (t.hours == 2) {
             if (t.minutes > 5) {
@@ -733,73 +742,72 @@ void loop() {
               setWord(fuenfMin);
               break;
           }
+          //-------german end----------------------------------------------------------------------------------------------
+        } else if (strcmp(language, "english") == 0) {
+          //-------english-------------------------------------------------------------------------------------------------
+          /*
+          setWord(it);
+          setWord(is);
+          if (t.minutes > 24) {
+            t.hours = t.hours + 1;
+          }
+          t.hours = t.hours % 12;
+          setWord(hourArray[t.hours]);
+
+          //es ist x "UHR" minuten
+          if (t.minutes <= 4) {
+            setWord(oclock);
+          }
+          int minuteStep = (t.minutes - minutedivision);
+          switch (minuteStep) {
+            case 5:
+              setWord(past);
+              setWord(fiveMinutes);
+              break;
+            case 10:
+              setWord(past);
+              setWord(tenMinutes);
+              break;
+            case 15:
+              setWord(past);
+              setWord(quarter);
+              break;
+            case 20:
+              setWord(past);
+              setWord(twenty);
+              break;
+            case 25:
+              setWord(fiveMinutes);
+              setWord(twenty);
+              break;
+            case 30:
+              setWord(half);
+              break;
+            case 35:
+              setWord(past);
+              setWord(fiveMinutes);
+              setWord(half);
+              break;
+            case 40:
+              setWord(to);
+              setWord(twenty);
+              break;
+            case 45:
+              setWord(to);
+              setWord(quarter);
+              break;
+            case 50:
+              setWord(to);
+              setWord(tenMinutes);
+              break;
+            case 55:
+              setWord(to);
+              setWord(fiveMinutes);
+              break;
+          }
           */
-        //-------german end----------------------------------------------------------------------------------------------
-        //-------english-------------------------------------------------------------------------------------------------
-
-        setWord(it);
-        setWord(is);
-        if (t.minutes > 24) {
-          t.hours = t.hours + 1;
+          //------------------english end--------------------------------------------------------------
         }
-        t.hours = t.hours % 12;
-        setWord(hourArray[t.hours]);
-
-        //es ist x "UHR" minuten
-        if (t.minutes <= 4) {
-          setWord(oclock);
-        }
-        int minuteStep = (t.minutes - minutedivision);
-        switch (minuteStep) {
-          case 5:
-            setWord(past);
-            setWord(fiveMinutes);
-            break;
-          case 10:
-            setWord(past);
-            setWord(tenMinutes);
-            break;
-          case 15:
-            setWord(past);
-            setWord(quarter);
-            break;
-          case 20:
-            setWord(past);
-            setWord(twenty);
-            break;
-          case 25:
-            setWord(fiveMinutes);
-            setWord(twenty);
-            setWord(past);
-            break;
-          case 30:
-            setWord(half);
-            setWord(past);
-            break;
-          case 35:
-            setWord(to);
-            setWord(fiveMinutes);
-            setWord(twenty);
-            break;
-          case 40:
-            setWord(to);
-            setWord(twenty);
-            break;
-          case 45:
-            setWord(to);
-            setWord(quarter);
-            break;
-          case 50:
-            setWord(to);
-            setWord(tenMinutes);
-            break;
-          case 55:
-            setWord(to);
-            setWord(fiveMinutes);
-            break;
-        }
-        //------------------english end--------------------------------------------------------------
-
         updateWords = false;
       }
       if (updateCorners) {
