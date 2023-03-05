@@ -11,15 +11,15 @@ echo "Updating python files from github..."
 echo "downloading new files..."
 cd
 cd /home/pi/wordclock
-sudo bash -c "curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/changeToWifi.sh >changeToWifi.sh"
-sudo bash -c "curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/changeToAp.sh >changeToAp.sh"
-sudo bash -c "curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/wordclock.py >wordclock.py" 
+sudo bash -c "curl -o changeToWifi.sh https://raw.githubusercontent.com/S-A-M-J/wordclock/main/changeToWifi.sh"
+sudo bash -c "curl -o changeToAp.sh https://raw.githubusercontent.com/S-A-M-J/wordclock/main/changeToAp.sh"
+sudo bash -c "curl -o wordclock.py https://raw.githubusercontent.com/S-A-M-J/wordclock/main/wordclock.py" 
 cd
 echo "downloading flow file..."
 cd /home/pi/.node-red
 sudo rm flows.json
 cd
-sudo bash -c "curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/node-red-flows-wordclock.json >flows.json"
+sudo bash -c "curl -o flows.json https://raw.githubusercontent.com/S-A-M-J/wordclock/main/node-red-flows-wordclock.json"
 
 sudo touch flows.json
 sudo mv flows.json /home/pi/.node-red/flows.json
