@@ -40,7 +40,7 @@ sudo curl \-H 'Authorization: Bearer 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' \
 cd
 echo "downloading github files..."
 cd /home/pi
-sudo curl \-H 'Authorization: Bearer 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' \-H 'Accept: application/vnd.github.v3.raw' \ -L https://api.github.com/repos/S-A-M-J/wordclock/contents/pull_update_script.sh >pull-update.sh
+sudo curl -sL https://api.github.com/repos/S-A-M-J/wordclock/contents/pull_update_script.sh >pull-update.sh
 echo "creating hotspot and wlan services"
 cd
 curl \-H 'Authorization: Bearer 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
