@@ -659,6 +659,8 @@ void loop() {
     t.minutes = rtc.getMinute();
     t.seconds = rtc.getSecond();
     if (IrReceiver.decode() && IRActive) {
+
+      
       IrReceiver.resume();  // Enable receiving of the next value
       handleIRCommand(IrReceiver.decodedIRData.command);
       updateWords = true;
