@@ -66,6 +66,7 @@ bool updateCorners = true;
 bool updateWords = true;
 bool clockON = true;
 bool wifiTimerActive = false;
+bool IRActive = true; 
 
 long wifiTimeOutTimer = 0;
 
@@ -220,22 +221,22 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
         espalexa.addDevice("wortuhr", colorLightChanged, EspalexaDeviceType::color);
         espalexa.begin();
       }
-      preferences.begin("alexaSettings", false);
-      preferences.remove("status");
-      preferences.putBool("status", true);
+      preferences.begin("settings", false);
+      preferences.remove("alexaActive");
+      preferences.putBool("alexaActive", true);
       preferences.end();
       alexaActivatedInitial = false;
     } else if (strcmp(messagePart, "#alexaOff") == 0) {
       alexaActivated = false;
-      preferences.begin("alexaSettings", false);
+      preferences.begin("settings", false);
       preferences.clear();
-      preferences.putBool("status", false);
+      preferences.putBool("alexaActive", false);
       preferences.end();
     } else if (strcmp(messagePart, "#reset") == 0) {
       preferences.begin("credentials", false);
       preferences.clear();
       preferences.end();
-      preferences.begin("alexaSettings", false);
+      preferences.begin("settings", false);
       preferences.clear();
       preferences.end();
       ESP.restart();
@@ -294,6 +295,18 @@ class incomingCallbackHandler : public BLECharacteristicCallbacks {
       messagePart = strtok(NULL, delimiter);
       memcpy(value, messagePart, strlen(messagePart));
       uhrfarbe.b = atoi(value);
+    } else if (strcmp(messagePart, "#IROn") == 0) {
+      preferences.begin("settings", false);
+      preferences.remove("IRActive");
+      preferences.putBool("IRActive", true);
+      preferences.end();
+      IRActive = true;
+    } else if (strcmp(messagePart, "#IROff") == 0) {
+      preferences.begin("settings", false);
+      preferences.remove("IRActive");
+      preferences.putBool("IRActive", false);
+      preferences.end();
+      IRActive = false; 
     }
     updateCorners = true;
     updateWords = true;
@@ -586,8 +599,9 @@ void setup() {
         setUhrfarbe(0, 0, 0);
         setWord(cornerLeds, false);
         FastLED.show();
-        preferences.begin("alexaSettings", false);
-        alexaActivated = preferences.getBool("status", false);
+        preferences.begin("settings", false);
+        alexaActivated = preferences.getBool("alexaActive", false);
+        IRActive = preferences.getBool("IRActive", true);
         preferences.end();
         if (alexaActivated) {
           if (alexaActivatedInitial) {
@@ -644,7 +658,7 @@ void loop() {
     t.hours = rtc.getHour();
     t.minutes = rtc.getMinute();
     t.seconds = rtc.getSecond();
-    if (IrReceiver.decode()) {
+    if (IrReceiver.decode() && IRActive) {
       IrReceiver.resume();  // Enable receiving of the next value
       handleIRCommand(IrReceiver.decodedIRData.command);
       updateWords = true;
