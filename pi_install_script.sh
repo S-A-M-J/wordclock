@@ -42,7 +42,7 @@ cd /home/pi
 sudo curl -o pull-update.sh https://raw.githubusercontent.com/S-A-M-J/wordclock/main/pull_update.sh
 echo "creating hotspot and wlan services"
 cd
-curl -o setup_wlan_and_AP_modes.sh h https://raw.githubusercontent.com/S-A-M-J/wordclock/main/setup_wlan_and_AP_modes.sh
+curl -o setup_wlan_and_AP_modes.sh https://raw.githubusercontent.com/S-A-M-J/wordclock/main/setup_wlan_and_AP_modes.sh
 sudo bash setup_wlan_and_AP_modes.sh -s KamelZuVermieten -p 1235813213455.81 -a WordclockNet -r WCKey2580 -d
 echo "installing change scripts...."
 echo "please reboot now by entering sudo reboot now"
