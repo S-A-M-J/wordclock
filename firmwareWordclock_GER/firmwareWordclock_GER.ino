@@ -41,7 +41,7 @@ struct color {
 Preferences preferences;
 
 #define IR_RECEIVE_PIN 33
-#define TOUCH_PIN 5
+#define TOUCH_PIN 34
 
 // See the following for generating UUIDs:
 // https://www.uuidgenerator.net/
@@ -65,8 +65,13 @@ bool updateCorners = true;
 bool updateWords = true;
 bool clockON = true;
 bool wifiTimerActive = false;
+bool longpress = false;
+bool touchActivated = false;
 
 long wifiTimeOutTimer = 0;
+long touchInputStart = 0;
+
+uint8_t stopper = 0;
 
 IPAddress ip;
 char ipString[20] = {};
@@ -525,6 +530,7 @@ void setup() {
   pServer->getAdvertising()->start();
   Serial.println("Waiting a client connection to notify...");
   advertising = true;
+  pinMode(TOUCH_PIN, INPUT);
   //---------------------------SETUP_LOOP----------------------------------------------------------------------
   int i = 0;
   long blinkTimer = 0;
@@ -607,7 +613,7 @@ void setup() {
   uhrfarbe.s = preferences.putInt("sat", 255);
   uhrfarbe.b = preferences.putInt("bri", 255);
   preferences.end();
-  if(uhrfarbe.b == 0){
+  if (uhrfarbe.b == 0) {
     uhrfarbe.b = 255;
   }
 }
@@ -647,6 +653,38 @@ void loop() {
       updateWords = true;
       updateCorners = true;
     }
+    if (digitalRead(TOUCH_PIN) && !touchActivated) {
+      touchInputStart = millis();
+      touchActivated = true;
+    }
+    if (millis() - touchInputStart > 500 && touchActivated) {
+      longpress = true;
+      if (uhrfarbe.b > 5) {
+        if (stopper == 3) {
+          uhrfarbe.b = uhrfarbe.b - 1;
+          stopper = 0;
+        }
+        stopper++;
+      } else {
+        uhrfarbe.b = 255;
+      }
+      updateWords = true;
+      updateCorners = true;
+    }
+    if (touchActivated && !digitalRead(TOUCH_PIN)) {
+      touchInputStart = 0;
+      touchActivated = false;
+      if (!longpress) {
+        if (clockON) {
+          clockON = false;
+        } else {
+          clockON = true;
+          updateWords = true;
+          updateCorners = true;
+        }
+      }
+      longpress = false;
+    }
 
     if (t.seconds == 0 && t.minutes == 0 && updateTime) {
       updateRTC();
@@ -680,7 +718,7 @@ void loop() {
             t.hours = t.hours + 1;
           }
           t.hours = t.hours % 12;
-          if(t.minutes < 5){
+          if (t.minutes < 5) {
             setWord(uhr);
           }
           //es ist x "UHR" minuten
