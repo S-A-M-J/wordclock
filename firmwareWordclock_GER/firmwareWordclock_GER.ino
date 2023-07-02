@@ -132,25 +132,6 @@ void checkOTA() {
 BLECharacteristic wordclockRxCharacteristic(CHARACTERISTIC_UUID_RX, BLECharacteristic::PROPERTY_NOTIFY);
 BLECharacteristic wordclockTxCharacteristic(CHARACTERISTIC_UUID_TX, BLECharacteristic::PROPERTY_WRITE);
 
-
-class MyServerCallbacks : public BLEServerCallbacks {
-  void onConnect(BLEServer* pServer) {
-    deviceConnected = true;
-    //Serial.println("ble connected");
-    if (WiFi.status() == WL_CONNECTED) {
-      notify = true;
-    }
-  }
-  void onDisconnect(BLEServer* pServer) {
-    deviceConnected = false;
-    Serial.println("BLE disconnected");
-    pServer->getAdvertising()->start();
-    Serial.println("Waiting a client connection to notify...");
-    advertising = true;
-  }
-};
-
-
 const char* ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 3600;
 const int daylightOffset_sec = 3600;
@@ -166,7 +147,7 @@ bool debouncerTouch = false;
 bool updateTime = true;
 bool partyMode = false;
 
-currentTime t = { 0, 0 };
+currentTime t = { 0, 0, 0 };
 struct tm timeinfo;
 
 // Define the array of leds
@@ -176,6 +157,20 @@ color uhrfarbe = { 125, 255, 255 };
 
 //prototype
 void setWord(uint8_t wordLeds[], boolean indice = true);
+
+class MyServerCallbacks : public BLEServerCallbacks {
+  void onConnect(BLEServer* pServer) {
+    deviceConnected = true;
+    //Serial.println("ble connected");
+    if (WiFi.status() == WL_CONNECTED) {
+      notify = true;
+    }
+  }
+  void onDisconnect(BLEServer* pServer) {
+    deviceConnected = false;
+    Serial.println("BLE disconnected");
+  }
+};
 
 //------------------------BLUETOOTH_CALLBACK---------------------------------------------------------------------------
 class incomingCallbackHandler : public BLECharacteristicCallbacks {
@@ -686,12 +681,12 @@ void loop() {
       longpress = false;
     }
 
-    if (t.seconds == 0 && t.minutes == 0 && updateTime) {
+    if (t.seconds == 0 && t.minutes == 1 && updateTime) {
       updateRTC();
       updateTime = false;
     }
 
-    if (!updateTime && t.minutes != 0) {
+    if (!updateTime && t.minutes != 1) {
       updateTime = true;
     }
 
