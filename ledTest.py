@@ -56,7 +56,7 @@ if __name__ == '__main__':
       strip.setPixelColor(i, Color(0, 255, 0, 0))
       strip.setBrightness(LED_BRIGHTNESS)
       strip.show()
-      time.sleep(1)
+      time.sleep(0.2)
       
     colorWipe(strip,Color(0,0,0,0))
     print('program finished')
