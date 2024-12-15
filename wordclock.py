@@ -61,6 +61,7 @@ vor = [74,75,76]
 
 halb = [64,65,66,67]
 viertel = [79,80,81,82,83,84,85]
+dreiviertel = [79,80,81,82,83,84,85,86,87,88,89]
 zehnMin = [90,91,92,93]
 zwanzigMin = [94,95,96,97,98,99,100]
 fuenfMin =[102,103,104,105]
@@ -82,8 +83,13 @@ def setWord(wordLeds, clockColorSet):
 if __name__ == '__main__':
     hours = int(sys.argv[1])
     minutes = int(sys.argv[2])
-    if minutes >= 25:
-        hours = hours+1
+    mode = int(sys.argv[8])
+    if mode == 0:
+        if minutes >= 25:
+            hours = hours+1
+    elif mode == 1:
+        if minutes >= 15:
+            hours = hours+1
     hours = hours % 12
     brightnessFloat = float(sys.argv[3])
     brightness = round(brightnessFloat)
@@ -148,22 +154,40 @@ if __name__ == '__main__':
     if minutes < 5:
         setWord(uhr,clockcolor)
     else:
-        if minutes == 5 or minutes == 25 or minutes == 35 or minutes == 55:
-            setWord(fuenfMin,clockcolor)
-        elif minutes == 10 or minutes == 50:
-            setWord(zehnMin,clockcolor)
-        elif minutes == 15 or minutes == 45:
-            setWord(viertel,clockcolor)
-        elif minutes == 20 or minutes == 40:
-            setWord(zwanzigMin,clockcolor)
-    
-        if minutes >=25 and minutes <= 35:
-            setWord(halb,clockcolor)
+        #mode 0 = westdeutscher mode
+        if mode == 0:
+            if minutes == 5 or minutes == 25 or minutes == 35 or minutes == 55:
+                setWord(fuenfMin,clockcolor)
+            elif minutes == 10 or minutes == 50:
+                setWord(zehnMin,clockcolor)
+            elif minutes == 15 or minutes == 45:
+                setWord(viertel,clockcolor)
+            elif minutes == 20 or minutes == 40:
+                setWord(zwanzigMin,clockcolor)
         
-        if minutes < 25 or minutes == 35:
-            setWord(nach,clockcolor)
-        elif minutes == 25 or minutes>35:
-            setWord(vor,clockcolor)
+            if minutes >=25 and minutes <= 35:
+                setWord(halb,clockcolor)
+            
+            if minutes < 25 or minutes == 35:
+                setWord(nach,clockcolor)
+            elif minutes == 25 or minutes>35:
+                setWord(vor,clockcolor)
+        #mode 1 = ostdeutscher mode
+        elif mode == 1:
+            if minutes == 5 or minutes == 25 or minutes == 35 or minutes == 55:
+                setWord(fuenfMin,clockcolor)
+            if minutes == 10 or minutes == 20 or minutes == 40 or minutes == 50:
+                setWord(zehnMin,clockcolor)
+            if minutes == 15:
+                setWord(viertel,clockcolor)
+            if minutes == 45:
+                setWord(dreiviertel,clockcolor)
+            if minutes >=20 and minutes <= 40:
+                setWord(halb,clockcolor)
+            if minutes <= 10 or minutes == 35 or minutes == 40:
+                setWord(nach,clockcolor)
+            elif minutes == 25 or minutes>45:
+                setWord(vor,clockcolor)
     strip.setBrightness(int(brightness))
     strip.show()
     print('program finished')
