@@ -83,7 +83,7 @@ def setWord(wordLeds, clockColorSet):
 if __name__ == '__main__':
     hours = int(sys.argv[1])
     minutes = int(sys.argv[2])
-    mode = int(sys.argv[8])
+    mode = int(sys.argv[8]) #0 = westdeutscher mode, 1 = ostdeutscher mode
     if mode == 0:
         if minutes >= 25:
             hours = hours+1
@@ -154,7 +154,6 @@ if __name__ == '__main__':
     if minutes < 5:
         setWord(uhr,clockcolor)
     else:
-        #mode 0 = westdeutscher mode
         if mode == 0:
             if minutes == 5 or minutes == 25 or minutes == 35 or minutes == 55:
                 setWord(fuenfMin,clockcolor)
@@ -172,7 +171,6 @@ if __name__ == '__main__':
                 setWord(nach,clockcolor)
             elif minutes == 25 or minutes>35:
                 setWord(vor,clockcolor)
-        #mode 1 = ostdeutscher mode
         elif mode == 1:
             if minutes == 5 or minutes == 25 or minutes == 35 or minutes == 55:
                 setWord(fuenfMin,clockcolor)
@@ -186,7 +184,7 @@ if __name__ == '__main__':
                 setWord(halb,clockcolor)
             if minutes <= 10 or minutes == 35 or minutes == 40:
                 setWord(nach,clockcolor)
-            elif minutes == 25 or minutes>45:
+            elif minutes == 25 or minutes == 20 or minutes>45:
                 setWord(vor,clockcolor)
     strip.setBrightness(int(brightness))
     strip.show()
