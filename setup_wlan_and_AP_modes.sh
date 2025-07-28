@@ -7,11 +7,11 @@
 #%
 #% DESCRIPTION
 #%    This script sets up a Raspberry Pi to switch between station and AP modes
-#%    without reboot. You must reboot your Pi after running this script
+#%    using dhcpcd and hostapd. You must reboot your Pi after running this script
 #%    After reboot, use either of the following commands to switch between
 #%    these modes:
-#%      # systemctl start wpa_supplicant@ap0
-#%      # systemctl start wpa_supplicant@wlan0
+#%      # systemctl start wordclock-station
+#%      # systemctl start wordclock-ap
 #%
 #% OPTIONS
 #%    -s [STASSID], --stassid=[STASSID]   Set the SSID to be connected to when
@@ -562,103 +562,192 @@ fi
 {
   scriptstart
   #== start your program here ==#
-  infotitle "Masking existing network services"
+  infotitle "Setting up dhcpcd configuration"
 
-  # disable debian networking and dhcpcd
-  exec_cmd "systemctl mask networking.service"
-  exec_cmd "systemctl mask dhcpcd.service"
-  exec_cmd "mv /etc/network/interfaces /etc/network/interfaces~"
-  exec_cmd "sed -i '1i resolvconf=NO' /etc/resolvconf.conf"
-
-  infotitle "Enabling systemd-networkd and systemd-resolved"
-
-  # enable systemd-networkd
-  exec_cmd "systemctl enable systemd-networkd.service"
-  # Only enable and link systemd-resolved if it exists, else write static resolv.conf
-  if systemctl list-unit-files | grep -q '^systemd-resolved.service'; then
-    exec_cmd "systemctl enable systemd-resolved.service"
-    exec_cmd "systemctl start systemd-resolved.service"
-    exec_cmd "ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf"
-  else
-    echo 'nameserver 8.8.8.8\nnameserver 1.1.1.1' > /etc/resolv.conf
-    info "systemd-resolved not found, wrote static /etc/resolv.conf with public DNS."
+  # Ensure dhcpcd is enabled (default on modern Pi OS)
+  exec_cmd "systemctl enable dhcpcd.service"
+  
+  # Disable old networking services if they exist
+  if systemctl list-unit-files | grep -q '^networking.service'; then
+    exec_cmd "systemctl disable networking.service"
+  fi
+  
+  # Remove old network interfaces file if it exists
+  if [ -f /etc/network/interfaces ]; then
+    exec_cmd "mv /etc/network/interfaces /etc/network/interfaces.backup"
+    info "Moved old /etc/network/interfaces to backup"
   fi
 
-  infotitle "Creating wlan0 wpa_supplicant file"
+  infotitle "Configuring dhcpcd for dual interface support"
 
-  cat >/etc/wpa_supplicant/wpa_supplicant-wlan0.conf <<EOF
+  # Create dhcpcd configuration
+  cat >/etc/dhcpcd.conf <<EOF
+# dhcpcd configuration for wordclock dual WiFi setup
+# See dhcpcd.conf(5) for details.
+
+# Allow users of this group to interact with dhcpcd via the control socket.
+controlgroup netdev
+
+# Inform the DHCP server of our hostname for DDNS.
+hostname
+
+# Use the hardware address of the interface for the Client ID.
+clientid
+
+# Persist interface configuration when dhcpcd exits.
+persistent
+
+# vendorclassid is set to blank to avoid sending the default of
+# dhcpcd-<version>:<os>:<machine>:<platform>
+vendorclassid
+
+# A list of options to request from the DHCP server.
+option rapid_commit
+option domain_name_servers, domain_name, domain_search, host_name
+option classless_static_routes
+option interface_mtu
+
+# Respect the network MTU. This is applied to DHCP routes.
+option interface_mtu
+
+# Most distributions have NTP support.
+#option ntp_servers
+
+# A ServerID is required by RFC2131.
+require dhcp_server_identifier
+
+# Generate SLAAC address using the hardware address of the interface
+slaac hwaddr
+
+# OR generate Stable Private IPv6 Addresses based from the DUID
+#slaac private
+
+# Static IP configuration for AP mode (ap0)
+interface ap0
+static ip_address=192.168.4.1/24
+nohook wpa_supplicant
+
+# DHCP configuration for client mode (wlan0)
+interface wlan0
+# Use DHCP for client mode - no static config needed
+EOF
+
+  infotitle "Creating wpa_supplicant configuration for station mode"
+
+  cat >/etc/wpa_supplicant/wpa_supplicant.conf <<EOF
 country=DE
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
 update_config=1
+
 network={
     ssid="${staSsid}"
     psk="${staPsk}"
 }
 EOF
 
-  exec_cmd "chmod 600 /etc/wpa_supplicant/wpa_supplicant-wlan0.conf"
-  exec_cmd "systemctl disable wpa_supplicant.service"
-  exec_cmd "systemctl enable wpa_supplicant@wlan0.service"
+  exec_cmd "chmod 600 /etc/wpa_supplicant/wpa_supplicant.conf"
 
-  infotitle "Creating ap0 wpa_supplicant file"
+  infotitle "Installing and configuring hostapd for AP mode"
 
-  cat >/etc/wpa_supplicant/wpa_supplicant-ap0.conf <<EOF
-country=DE
-ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-update_config=1
-network={
-    ssid="${apSsid}"
-    mode=2
-    key_mgmt=WPA-PSK
-    proto=RSN WPA
-    psk="${apPsk}"
-    frequency=2412
-}
+  # Install hostapd and dnsmasq
+  exec_cmd "apt-get update"
+  exec_cmd "apt-get install -y hostapd dnsmasq"
+
+  # Configure hostapd
+  cat >/etc/hostapd/hostapd.conf <<EOF
+interface=ap0
+driver=nl80211
+ssid=${apSsid}
+hw_mode=g
+channel=7
+wmm_enabled=0
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_passphrase=${apPsk}
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+country_code=DE
 EOF
 
-  exec_cmd "chmod 600 /etc/wpa_supplicant/wpa_supplicant-ap0.conf"
-
-  infotitle "Creating both wlan0 and ap0 systemd network files"
-
-  cat >/etc/systemd/network/08-wlan0.network <<EOF
-[Match]
-Name=wlan0
-[Network]
-DHCP=yes
+  # Configure dnsmasq for DHCP on AP
+  cat >/etc/dnsmasq.conf <<EOF
+# Configuration for wordclock AP mode
+interface=ap0
+dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
+domain=local
+address=/wordclock.local/192.168.4.1
 EOF
 
-  cat >/etc/systemd/network/12-ap0.network <<EOF
-[Match]
-Name=ap0
-[Network]
-Address=192.168.4.1/24
-DHCPServer=yes
-[DHCPServer]
-DNS=84.200.69.80 1.1.1.1
+  # Point hostapd to config file
+  exec_cmd "sed -i 's|^#DAEMON_CONF=.*|DAEMON_CONF=\"/etc/hostapd/hostapd.conf\"|' /etc/default/hostapd"
+
+  infotitle "Creating systemd services for mode switching"
+
+  # Create service to start station mode
+  cat >/etc/systemd/system/wordclock-station.service <<EOF
+[Unit]
+Description=Wordclock Station Mode
+After=dhcpcd.service
+Conflicts=wordclock-ap.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/bash -c 'ip link set ap0 down 2>/dev/null || true; ip link delete ap0 2>/dev/null || true; systemctl stop hostapd; systemctl stop dnsmasq; rfkill unblock wlan; ifconfig wlan0 up; wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf; dhcpcd wlan0'
+ExecStop=/bin/bash -c 'killall wpa_supplicant 2>/dev/null || true; dhcpcd -k wlan0 2>/dev/null || true'
+
+[Install]
+WantedBy=multi-user.target
 EOF
 
-  infotitle "Now for some slick systemd unit editing!"
+  # Create service to start AP mode
+  cat >/etc/systemd/system/wordclock-ap.service <<EOF
+[Unit]
+Description=Wordclock Access Point Mode
+After=dhcpcd.service
+Conflicts=wordclock-station.service
 
-  exec_cmd "systemctl disable wpa_supplicant@ap0.service"
-  exec_cmd "cp /lib/systemd/system/wpa_supplicant@.service /etc/systemd/system/wpa_supplicant@ap0.service"
-  exec_cmd "sed -i 's/Requires=sys-subsystem-net-devices-%i.device/Requires=sys-subsystem-net-devices-wlan0.device/' /etc/systemd/system/wpa_supplicant@ap0.service"
-  exec_cmd "sed -i 's/After=sys-subsystem-net-devices-%i.device/After=sys-subsystem-net-devices-wlan0.device/' /etc/systemd/system/wpa_supplicant@ap0.service"
-  exec_cmd "sed -i '/After=sys-subsystem-net-devices-wlan0.device/a Conflicts=wpa_supplicant@wlan0.service' /etc/systemd/system/wpa_supplicant@ap0.service"
-  exec_cmd "sed -i '/Type=simple/a ExecStartPre=/sbin/iw dev wlan0 interface add ap0 type __ap' /etc/systemd/system/wpa_supplicant@ap0.service"
-  exec_cmd "sed -i '/ExecStart=/a ExecStopPost=/sbin/iw dev ap0 del' /etc/systemd/system/wpa_supplicant@ap0.service"
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/bash -c 'killall wpa_supplicant 2>/dev/null || true; dhcpcd -k wlan0 2>/dev/null || true; iw dev wlan0 interface add ap0 type __ap; ifconfig ap0 up; systemctl start hostapd; systemctl start dnsmasq'
+ExecStop=/bin/bash -c 'systemctl stop hostapd; systemctl stop dnsmasq; ip link set ap0 down; ip link delete ap0'
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  # Reload systemd
   exec_cmd "systemctl daemon-reload"
 
-  infotitle "Finally, setup the default wifi option"
+  infotitle "Setting up default mode"
 
   if [[ $flagOptD == 1 ]]; then
-    exec_cmd "systemctl disable wpa_supplicant@wlan0.service"
-    exec_cmd "systemctl enable wpa_supplicant@ap0.service"
+    exec_cmd "systemctl enable wordclock-ap.service"
+    exec_cmd "systemctl disable wordclock-station.service"
+    info "Default mode set to Access Point"
   else
-    exec_cmd "systemctl enable wpa_supplicant@wlan0.service"
-    exec_cmd "systemctl disable wpa_supplicant@ap0.service"
+    exec_cmd "systemctl enable wordclock-station.service"
+    exec_cmd "systemctl disable wordclock-ap.service"
+    info "Default mode set to Station (client)"
   fi
 
-  infotitle "YOU SHOULD NOW REBOOT YOUR PI" && echo "Run 'sudo reboot now'"
+  infotitle "YOU SHOULD NOW REBOOT YOUR PI"
+  
+  echo ""
+  echo "Setup complete! After reboot, you can switch between modes using:"
+  echo ""
+  echo "  Switch to Station Mode (connect to WiFi):"
+  echo "    sudo systemctl start wordclock-station"
+  echo ""
+  echo "  Switch to Access Point Mode (create WiFi hotspot):"
+  echo "    sudo systemctl start wordclock-ap"
+  echo ""
+  echo "Run 'sudo reboot now' to complete the setup."
+  echo ""
 
   #== end   your program here ==#
   scriptfinish
