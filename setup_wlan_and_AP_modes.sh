@@ -574,8 +574,15 @@ fi
 
   # enable systemd-networkd
   exec_cmd "systemctl enable systemd-networkd.service"
-  exec_cmd "systemctl enable systemd-resolved.service"
-  exec_cmd "ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf"
+  # Only enable and link systemd-resolved if it exists, else write static resolv.conf
+  if systemctl list-unit-files | grep -q '^systemd-resolved.service'; then
+    exec_cmd "systemctl enable systemd-resolved.service"
+    exec_cmd "systemctl start systemd-resolved.service"
+    exec_cmd "ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf"
+  else
+    echo 'nameserver 8.8.8.8\nnameserver 1.1.1.1' > /etc/resolv.conf
+    info "systemd-resolved not found, wrote static /etc/resolv.conf with public DNS."
+  fi
 
   infotitle "Creating wlan0 wpa_supplicant file"
 

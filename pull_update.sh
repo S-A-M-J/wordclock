@@ -3,7 +3,7 @@
 #wordclock update python files script
 echo "deleting old files if existent"
 cd /home/pi
-if [ -d wordclock]; then
+if [ -d wordclock ]; then
 	sudo rm -r wordclock
 fi
 mkdir -m 777 /home/pi/wordclock
