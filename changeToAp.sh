@@ -1,4 +1,4 @@
 #!/bin/bash
-sudo systemctl start wpa_supplicant@ap0.service
+sudo systemctl enable wordclock-ap.service
 sleep 10
 node-red-restart
