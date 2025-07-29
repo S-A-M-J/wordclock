@@ -14,6 +14,7 @@ cd /home/pi/wordclock
 sudo bash -c "curl -o changeToWifi.sh https://raw.githubusercontent.com/S-A-M-J/wordclock/main/changeToWifi.sh"
 sudo bash -c "curl -o changeToAp.sh https://raw.githubusercontent.com/S-A-M-J/wordclock/main/changeToAp.sh"
 sudo bash -c "curl -o wordclock.py https://raw.githubusercontent.com/S-A-M-J/wordclock/main/wordclock.py" 
+sudo bash -c "curl -o test.py https://raw.githubusercontent.com/S-A-M-J/wordclock/main/test.py"
 cd
 echo "downloading flow file..."
 cd /home/pi/.node-red

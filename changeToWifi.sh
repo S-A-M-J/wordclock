@@ -1,4 +1,4 @@
 #!/bin/bash
-sudo systemctl disable wordclock-station.service
+sudo systemctl start wordclock-station
 sleep 10
 node-red-restart
