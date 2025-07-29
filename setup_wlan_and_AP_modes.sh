@@ -1,48 +1,68 @@
 #!/bin/bash
 #===============================================================================
-# HEADER
+# WORDCLOCK WIFI SETUP SCRIPT
 #===============================================================================
 #% SYNOPSIS
-#+    ${SCRIPT_NAME} [-vdth] -s [STASSID] -p [STAPSK] -a [AP] -r [PSK] [-o [file]]
+#+    ${SCRIPT_NAME} [-vdth] -s [STASSID] -p [STAPSK] [-o [file]]
 #%
 #% DESCRIPTION
-#%    This script sets up a Raspberry Pi to switch between station and AP modes
-#%    using dhcpcd and hostapd. You must reboot your Pi after running this script
-#%    After reboot, use either of the following commands to switch between
-#%    these modes:
-#%      # systemctl start wordclock-station
-#%      # systemctl start wordclock-ap
-#%
+#+    This script configures a Raspberry Pi wordclock for automatic WiFi
+#+    connection with AP (hotspot) fallback. The system will:
+#+    
+#+    1. Try to connect to your home WiFi network automatically on boot
+#+    2. If connection fails or is lost, automatically create a hotspot
+#+    3. Monitor WiFi connection and retry if disconnected
+#+    4. Provide manual control commands for override
+#+
+#+    AUTOMATIC MODE (Default):
+#+      The system automatically manages WiFi connections. No user intervention
+#+      needed. Will try WiFi first, fall back to AP mode if WiFi fails.
+#+
+#+    MANUAL CONTROL COMMANDS:
+#+      sudo systemctl status wordclock-wifi     # View current status
+#+      sudo journalctl -u wordclock-wifi -f     # View live logs
+#+      sudo tail -f /var/log/wordclock-wifi.log # View detailed logs
+#+      
+#+      sudo systemctl start wordclock-station   # Force WiFi mode
+#+      sudo systemctl start wordclock-ap        # Force hotspot mode
+#+      sudo systemctl start wordclock-wifi      # Return to auto mode
+#+
+#+    TROUBLESHOOTING:
+#+      If WiFi isn't working, the wordclock will automatically create a hotspot
+#+      named "WordclockNet" with password "WCKey2580". Connect to this hotspot
+#+      and access the wordclock at http://192.168.4.1
+#+
 #% OPTIONS
-#%    -s [STASSID], --stassid=[STASSID]   Set the SSID to be connected to when
-#%                                        in station mode.
-#%    -p [STAPSK], --stapsk=[STAPSK]      Set the PSK associated with the SSID
-#%                                        when in station mode.
-#%    -a [AP],     --apssid=[AP]          Set the SSID for AP mode.
-#%    -r [PSK],    --appsk=[PSK]          Set the PSK for AP mode.
-#%    -d,          --preferap             Prefer AP mode by default instead of
-#%                                        station mode.
-#%    -o [file],   --output=[file]        Set log file (default=/dev/null)
-#%                                        use DEFAULT keyword to autoname file
-#%                                        The default value is /dev/null.
-#%    -t,          --timelog              Add timestamp to log ("+%y/%m/%d@%H:%M:%S")
-#%    -h,          --help                 Print this help
-#%    -v,          --version              Print script information
-#%
+#+    -s [STASSID], --stassid=[STASSID]   Set the SSID to connect to in station mode
+#+    -p [STAPSK], --stapsk=[STAPSK]      Set the password for the station SSID
+#+    -o [file],   --output=[file]        Set log file (default=/dev/null)
+#+    -t,          --timelog              Add timestamp to log
+#+    -h,          --help                 Print this help
+#+    -v,          --version              Print script information
+#+
 #% EXAMPLES
-#%    ${SCRIPT_NAME} -o DEFAULT arg1 arg2
-#%
+#+    ${SCRIPT_NAME} -s "MyHomeWiFi" -p "MyPassword"
+#+    ${SCRIPT_NAME} -s "MyHomeWiFi" -p "MyPassword" -o DEFAULT
+#+
 #================================================================
 #- IMPLEMENTATION
-#-    version         ${SCRIPT_NAME} 0.0.1
-#-    author          John SCIMONE (https://github.com/autodrop3d/raspi-scripts)
+#-    version         ${SCRIPT_NAME} 2.0.0
+#-    author          Modified for Wordclock project
 #-    license         MIT License
-#-    script_id       0
+#-    script_id       wordclock_wifi_setup
 #-
 #================================================================
 #  HISTORY
-#     2019/06/15 : mvongvilay : Script creation
+#+     2025/07/29 : Modified for automatic WiFi with AP fallback
+#+     2019/06/15 : Original script creation
 #
+#================================================================
+
+#== HARDCODED AP CONFIGURATION ==#
+# These are the default hotspot credentials when WiFi fails
+DEFAULT_AP_SSID="WordclockNet"
+DEFAULT_AP_PSK="WCKey2580"
+
 #================================================================
 # END_OF_HEADER
 #================================================================
@@ -504,8 +524,19 @@ while getopts ${SCRIPT_OPTS} OPTION; do
     ;;
   esac
 done
-if [ $flagOptS == 0 ] || [ $flagOptP == 0 ] || [ $flagOptR == 0 ] || [ $flagOptR == 0 ]; then
-  error "${SCRIPT_NAME} Requires the s, p, a, and r options" && usage 1>&2 && exit 1
+
+# Use hardcoded AP credentials if not provided
+if [ $flagOptA == 0 ]; then
+  apSsid="$DEFAULT_AP_SSID"
+  flagOptA=1
+fi
+if [ $flagOptR == 0 ]; then
+  apPsk="$DEFAULT_AP_PSK"
+  flagOptR=1
+fi
+
+if [ $flagOptS == 0 ] || [ $flagOptP == 0 ]; then
+  error "${SCRIPT_NAME} Requires the -s (station SSID) and -p (station password) options" && usage 1>&2 && exit 1
 fi
 shift $((${OPTIND} - 1))                      ## shift options
 
@@ -684,19 +715,151 @@ EOF
   # Point hostapd to config file
   exec_cmd "sed -i 's|^#DAEMON_CONF=.*|DAEMON_CONF=\"/etc/hostapd/hostapd.conf\"|' /etc/default/hostapd"
 
-  infotitle "Creating systemd services for mode switching"
+  infotitle "Creating systemd services for automatic WiFi with AP fallback"
 
-  # Create service to start station mode
+  # Create WiFi connection monitoring script
+  cat >/usr/local/bin/wordclock-wifi-monitor.sh <<'EOF'
+#!/bin/bash
+
+LOGFILE="/var/log/wordclock-wifi.log"
+WIFI_TIMEOUT=30
+CHECK_INTERVAL=10
+MAX_RETRIES=3
+
+log_message() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOGFILE"
+}
+
+cleanup_interfaces() {
+    log_message "Cleaning up interfaces..."
+    killall wpa_supplicant 2>/dev/null || true
+    dhcpcd -k wlan0 2>/dev/null || true
+    systemctl stop hostapd 2>/dev/null || true
+    systemctl stop dnsmasq 2>/dev/null || true
+    ip link set ap0 down 2>/dev/null || true
+    ip link delete ap0 2>/dev/null || true
+    sleep 2
+}
+
+start_station_mode() {
+    log_message "Starting station mode..."
+    cleanup_interfaces
+    
+    rfkill unblock wlan
+    ifconfig wlan0 up
+    
+    log_message "Starting wpa_supplicant..."
+    wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf
+    
+    log_message "Starting DHCP client..."
+    dhcpcd wlan0
+    
+    # Wait for connection with timeout
+    log_message "Waiting for WiFi connection (timeout: ${WIFI_TIMEOUT}s)..."
+    for i in $(seq 1 $WIFI_TIMEOUT); do
+        if wpa_cli -i wlan0 status | grep -q "wpa_state=COMPLETED"; then
+            if ip route | grep -q "default.*wlan0"; then
+                log_message "WiFi connected successfully!"
+                return 0
+            fi
+        fi
+        sleep 1
+    done
+    
+    log_message "WiFi connection failed or timed out"
+    return 1
+}
+
+start_ap_mode() {
+    log_message "Starting AP mode..."
+    cleanup_interfaces
+    
+    log_message "Creating AP interface..."
+    iw dev wlan0 interface add ap0 type __ap
+    ifconfig ap0 up
+    
+    log_message "Starting hostapd and dnsmasq..."
+    systemctl start hostapd
+    systemctl start dnsmasq
+    
+    # Verify AP is running
+    if systemctl is-active --quiet hostapd && systemctl is-active --quiet dnsmasq; then
+        log_message "AP mode started successfully!"
+        return 0
+    else
+        log_message "Failed to start AP mode"
+        return 1
+    fi
+}
+
+# Main logic
+log_message "=== Wordclock WiFi Monitor Starting ==="
+
+retry_count=0
+while [ $retry_count -lt $MAX_RETRIES ]; do
+    log_message "Connection attempt $((retry_count + 1)) of $MAX_RETRIES"
+    
+    if start_station_mode; then
+        log_message "Station mode successful, monitoring connection..."
+        
+        # Monitor connection in background
+        while true; do
+            sleep $CHECK_INTERVAL
+            
+            if ! wpa_cli -i wlan0 status | grep -q "wpa_state=COMPLETED" || ! ip route | grep -q "default.*wlan0"; then
+                log_message "WiFi connection lost, retrying..."
+                break
+            fi
+        done
+        
+        retry_count=$((retry_count + 1))
+    else
+        retry_count=$((retry_count + 1))
+    fi
+done
+
+log_message "Max retries reached, falling back to AP mode..."
+if start_ap_mode; then
+    log_message "Fallback to AP mode successful"
+    exit 0
+else
+    log_message "Failed to start AP mode, system may need manual intervention"
+    exit 1
+fi
+EOF
+
+  exec_cmd "chmod +x /usr/local/bin/wordclock-wifi-monitor.sh"
+
+  # Create the main wordclock WiFi service (auto-fallback)
+  cat >/etc/systemd/system/wordclock-wifi.service <<EOF
+[Unit]
+Description=Wordclock WiFi with AP Fallback
+After=dhcpcd.service
+Wants=dhcpcd.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/wordclock-wifi-monitor.sh
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  # Create service to manually start station mode
   cat >/etc/systemd/system/wordclock-station.service <<EOF
 [Unit]
-Description=Wordclock Station Mode
+Description=Wordclock Station Mode (Manual)
 After=dhcpcd.service
-Conflicts=wordclock-ap.service
+Conflicts=wordclock-ap.service wordclock-wifi.service
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/bin/bash -c 'ip link set ap0 down 2>/dev/null || true; ip link delete ap0 2>/dev/null || true; systemctl stop hostapd; systemctl stop dnsmasq; rfkill unblock wlan; ifconfig wlan0 up; wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf; dhcpcd wlan0'
+ExecStart=/bin/bash -c 'systemctl stop wordclock-wifi; ip link set ap0 down 2>/dev/null || true; ip link delete ap0 2>/dev/null || true; systemctl stop hostapd; systemctl stop dnsmasq; rfkill unblock wlan; ifconfig wlan0 up; wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf; dhcpcd wlan0'
 ExecStop=/bin/bash -c 'killall wpa_supplicant 2>/dev/null || true; dhcpcd -k wlan0 2>/dev/null || true'
 
 [Install]
@@ -706,14 +869,14 @@ EOF
   # Create service to start AP mode
   cat >/etc/systemd/system/wordclock-ap.service <<EOF
 [Unit]
-Description=Wordclock Access Point Mode
+Description=Wordclock Access Point Mode (Manual)
 After=dhcpcd.service
-Conflicts=wordclock-station.service
+Conflicts=wordclock-station.service wordclock-wifi.service
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/bin/bash -c 'killall wpa_supplicant 2>/dev/null || true; dhcpcd -k wlan0 2>/dev/null || true; iw dev wlan0 interface add ap0 type __ap; ifconfig ap0 up; systemctl start hostapd; systemctl start dnsmasq'
+ExecStart=/bin/bash -c 'systemctl stop wordclock-wifi; killall wpa_supplicant 2>/dev/null || true; dhcpcd -k wlan0 2>/dev/null || true; iw dev wlan0 interface add ap0 type __ap; ifconfig ap0 up; systemctl start hostapd; systemctl start dnsmasq'
 ExecStop=/bin/bash -c 'systemctl stop hostapd; systemctl stop dnsmasq; ip link set ap0 down; ip link delete ap0'
 
 [Install]
@@ -723,30 +886,47 @@ EOF
   # Reload systemd
   exec_cmd "systemctl daemon-reload"
 
-  infotitle "Setting up default mode"
+  infotitle "Setting up automatic WiFi with AP fallback"
 
-  if [[ $flagOptD == 1 ]]; then
-    exec_cmd "systemctl enable wordclock-ap.service"
-    exec_cmd "systemctl disable wordclock-station.service"
-    info "Default mode set to Access Point"
-  else
-    exec_cmd "systemctl enable wordclock-station.service"
-    exec_cmd "systemctl disable wordclock-ap.service"
-    info "Default mode set to Station (client)"
-  fi
+  # Enable the automatic WiFi service by default (always auto mode)
+  exec_cmd "systemctl enable wordclock-wifi.service"
+  exec_cmd "systemctl disable wordclock-station.service 2>/dev/null || true"
+  exec_cmd "systemctl disable wordclock-ap.service 2>/dev/null || true"
+  
+  info "Automatic WiFi with AP fallback enabled by default"
+  info "Station WiFi: ${staSsid}"
+  info "Fallback AP: ${apSsid} (password: ${apPsk})"
 
-  infotitle "YOU SHOULD NOW REBOOT YOUR PI"
+  infotitle "SETUP COMPLETE - REBOOT REQUIRED"
   
   echo ""
-  echo "Setup complete! After reboot, you can switch between modes using:"
+  echo "🎉 Wordclock WiFi Setup Complete!"
   echo ""
-  echo "  Switch to Station Mode (connect to WiFi):"
-  echo "    sudo systemctl start wordclock-station"
+  echo "CONFIGURATION SUMMARY:"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "📶 Home WiFi: ${staSsid}"
+  echo "🔥 Fallback Hotspot: ${apSsid} (password: ${apPsk})"
+  echo "🤖 Mode: AUTOMATIC (WiFi first, hotspot fallback)"
   echo ""
-  echo "  Switch to Access Point Mode (create WiFi hotspot):"
-  echo "    sudo systemctl start wordclock-ap"
+  echo "BEHAVIOR AFTER REBOOT:"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "1. 🔄 System will automatically try to connect to: ${staSsid}"
+  echo "2. ✅ If successful: Wordclock accessible at http://wordclock.local"
+  echo "3. ❌ If WiFi fails: Automatically creates hotspot '${apSsid}'"
+  echo "4. 📱 Connect to hotspot and access wordclock at http://192.168.4.1"
+  echo "5. 🔍 System continuously monitors and retries WiFi connection"
   echo ""
-  echo "Run 'sudo reboot now' to complete the setup."
+  echo "MANUAL CONTROL COMMANDS:"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "📊 View status:          sudo systemctl status wordclock-wifi"
+  echo "📜 View live logs:       sudo journalctl -u wordclock-wifi -f"
+  echo "📝 View detailed logs:   sudo tail -f /var/log/wordclock-wifi.log"
+  echo ""
+  echo "🔧 Force WiFi mode:      sudo systemctl start wordclock-station"
+  echo "📡 Force hotspot mode:   sudo systemctl start wordclock-ap"
+  echo "🤖 Return to auto mode:  sudo systemctl start wordclock-wifi"
+  echo ""
+  echo "⚠️  IMPORTANT: Run 'sudo reboot now' to activate the new configuration!"
   echo ""
 
   #== end   your program here ==#

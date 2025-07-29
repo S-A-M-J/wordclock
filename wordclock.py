@@ -83,7 +83,9 @@ def setWord(wordLeds, clockColorSet):
 if __name__ == '__main__':
     hours = int(sys.argv[1])
     minutes = int(sys.argv[2])
-    mode = int(sys.argv[8]) #0 = westdeutscher mode, 1 = ostdeutscher mode
+    mode = 0 # default mode is westdeutscher mode
+    if len(sys.argv) > 8:
+        mode = int(sys.argv[8]) # 0 = westdeutscher mode, 1 = ostdeutscher mode
     if mode == 0:
         if minutes >= 25:
             hours = hours+1

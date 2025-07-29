@@ -102,24 +102,6 @@ curl -o changeToAp.sh https://raw.githubusercontent.com/S-A-M-J/wordclock/main/c
 chmod +x changeToWifi.sh changeToAp.sh
 echo "Wordclock scripts downloaded successfully."
 
-# Create persistent config file if it doesn't exist
-CONFIG_FILE="/home/pi/wordclock/config.json"
-if [ ! -f "$CONFIG_FILE" ]; then
-  echo '{
-  "wifi_ssid": "",
-  "wifi_password": "",
-  "ap_ssid": "WordclockNet",
-  "ap_password": "WCKey2580",
-  "timezone": "Europe/Berlin",
-  "brightness": 100
-}' > "$CONFIG_FILE"
-  chown pi:pi "$CONFIG_FILE"
-  chmod 600 "$CONFIG_FILE"
-  echo "Created default config at $CONFIG_FILE"
-else
-  echo "Config file $CONFIG_FILE already exists, not overwriting."
-fi
-
 # Download update script
 echo "=== STEP 8: Downloading update script ==="
 cd /home/pi
@@ -131,8 +113,25 @@ echo "Update script downloaded successfully."
 echo "=== STEP 9: Creating hotspot and wlan services ==="
 curl -o setup_wlan_and_AP_modes.sh https://raw.githubusercontent.com/S-A-M-J/wordclock/main/setup_wlan_and_AP_modes.sh
 chmod +x setup_wlan_and_AP_modes.sh
-sudo bash setup_wlan_and_AP_modes.sh -s KamelZuVermieten -p 1235813213455.81 -a WordclockNet -r WCKey2580 -d
-echo "Hotspot and wlan services configured successfully."
+
+# Run the WiFi setup with your home WiFi credentials
+# The script will automatically set up the hotspot "WordclockNet" with password "WCKey2580"
+echo "Please enter your home WiFi credentials:"
+read -p "WiFi Network Name (SSID): " WIFI_SSID
+read -s -p "WiFi Password: " WIFI_PASSWORD
+echo ""
+
+sudo bash setup_wlan_and_AP_modes.sh -s "$WIFI_SSID" -p "$WIFI_PASSWORD"
+echo "WiFi setup completed successfully."
+
+echo ""
+echo "=== SETUP SUMMARY ==="
+echo "The wordclock is now configured with automatic WiFi management:"
+echo "• Home WiFi: $WIFI_SSID"
+echo "• Fallback Hotspot: WordclockNet (password: WCKey2580)"
+echo "• After reboot, it will automatically try to connect to your WiFi"
+echo "• If WiFi fails, it will create the hotspot automatically"
+echo "• Access the wordclock at http://wordclock.local or http://192.168.4.1 (in hotspot mode)"
 
 echo "=== INSTALLATION COMPLETE ==="
 echo "Installation complete. Please reboot now by entering: sudo reboot now"
