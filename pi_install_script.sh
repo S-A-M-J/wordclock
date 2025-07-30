@@ -24,7 +24,9 @@ echo "Package update completed successfully."
 
 # Install required packages
 echo "=== STEP 2: Installing required packages ==="
-sudo apt-get install -y python3-pip scons curl npm iptables-persistent -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+sudo apt-get install -y python3-pip scons curl npm iptables-persistent network-manager uuid-runtime -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+
+
 echo "Required packages installed successfully."
 
 # Install Node-RED
@@ -86,52 +88,153 @@ sudo pip3 install rpi_ws281x --break-system-packages || {
 
 # Configure iptables
 echo "=== STEP 6: Configuring iptables ==="
+
+# Ensure iptables-persistent is properly configured
+echo "Configuring iptables-persistent..."
 echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo debconf-set-selections
 echo iptables-persistent iptables-persistent/autosave_v6 boolean true | sudo debconf-set-selections
-sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-port 8980
-sudo bash -c "iptables-save > /etc/iptables/rules.v4"
-sudo bash -c "ip6tables-save  > /etc/iptables/rules.v6"
-echo "iptables configuration completed successfully."
 
-# Download wordclock scripts
-echo "=== STEP 7: Setting up wordclock scripts ==="
-mkdir -p /home/pi/wordclock
-cd /home/pi/wordclock
-curl -o changeToWifi.sh https://raw.githubusercontent.com/S-A-M-J/wordclock/main/changeToWifi.sh
-curl -o changeToAp.sh https://raw.githubusercontent.com/S-A-M-J/wordclock/main/changeToAp.sh
-chmod +x changeToWifi.sh changeToAp.sh
-echo "Wordclock scripts downloaded successfully."
+# Reconfigure the package to apply the debconf settings
+sudo dpkg-reconfigure -f noninteractive iptables-persistent
+
+# Create iptables directory if it doesn't exist
+sudo mkdir -p /etc/iptables
+
+# Add the NAT rules for port redirection
+echo "Adding iptables NAT rules..."
+
+# Redirect external traffic from port 80 to Node-RED dashboard (port 1880)
+sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 1880
+
+# Redirect local loopback traffic from port 80 to Node-RED dashboard (port 1880)  
+sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-port 1880
+
+# Allow traffic to Node-RED dashboard port
+sudo iptables -A INPUT -p tcp --dport 1880 -j ACCEPT
+
+# Allow traffic to Amazon Echo hub port (if needed)
+sudo iptables -A INPUT -p tcp --dport 8980 -j ACCEPT
+
+# Verify the rules were added
+if sudo iptables -t nat -L PREROUTING | grep -q "REDIRECT.*1880"; then
+    echo "✓ External port 80→1880 redirect rule added successfully."
+else
+    echo "✗ Warning: Failed to add external redirect rule."
+fi
+
+if sudo iptables -t nat -L OUTPUT | grep -q "REDIRECT.*1880"; then
+    echo "✓ Local port 80→1880 redirect rule added successfully."
+else
+    echo "✗ Warning: Failed to add local redirect rule."
+fi
+
+# Save the rules
+echo "Saving iptables rules..."
+if sudo iptables-save > /tmp/rules.v4.tmp && sudo mv /tmp/rules.v4.tmp /etc/iptables/rules.v4; then
+    echo "IPv4 iptables rules saved successfully."
+else
+    echo "Warning: Failed to save IPv4 iptables rules."
+fi
+
+if sudo ip6tables-save > /tmp/rules.v6.tmp && sudo mv /tmp/rules.v6.tmp /etc/iptables/rules.v6; then
+    echo "IPv6 iptables rules saved successfully."
+else
+    echo "Warning: Failed to save IPv6 iptables rules."
+fi
+
+# Ensure proper permissions
+sudo chmod 644 /etc/iptables/rules.v4 /etc/iptables/rules.v6 2>/dev/null || echo "Warning: Could not set iptables file permissions."
+
+# Restart netfilter-persistent to load the rules
+sudo systemctl restart netfilter-persistent || echo "Warning: Failed to restart netfilter-persistent service."
+
+echo "iptables configuration completed."
+
 
 # Download update script
-echo "=== STEP 8: Downloading update script ==="
+echo "=== STEP 7: Downloading update script ==="
 cd /home/pi
 curl -o pull_update.sh https://raw.githubusercontent.com/S-A-M-J/wordclock/main/pull_update.sh
 chmod +x pull_update.sh
 echo "Update script downloaded successfully."
 
 # Download and run setup script for hotspot and wlan
-echo "=== STEP 9: Creating hotspot and wlan services ==="
+echo "=== STEP 8: Creating hotspot and wlan services ==="
 curl -o setup_wlan_and_AP_modes.sh https://raw.githubusercontent.com/S-A-M-J/wordclock/main/setup_wlan_and_AP_modes.sh
 chmod +x setup_wlan_and_AP_modes.sh
 
-# Run the WiFi setup with your home WiFi credentials
-# The script will automatically set up the hotspot "WordclockNet" with password "WCKey2580"
-echo "Please enter your home WiFi credentials:"
-read -p "WiFi Network Name (SSID): " WIFI_SSID
-read -s -p "WiFi Password: " WIFI_PASSWORD
-echo ""
+# Detect current WiFi connection for display purposes
+CURRENT_WIFI=""
+if systemctl is-active --quiet NetworkManager; then
+    echo "Detecting current WiFi connection via NetworkManager..."
+    CURRENT_WIFI=$(nmcli -t -f active,ssid dev wifi | grep '^yes' | cut -d: -f2 2>/dev/null || echo "")
+fi
 
-sudo bash setup_wlan_and_AP_modes.sh -s "$WIFI_SSID" -p "$WIFI_PASSWORD"
-echo "WiFi setup completed successfully."
+# Fallback to iwgetid if NetworkManager doesn't show connection
+if [ -z "$CURRENT_WIFI" ]; then
+    CURRENT_WIFI=$(iwgetid -r 2>/dev/null || echo "Unknown")
+fi
+
+echo "Setting up wordclock services using existing WiFi configuration..."
+echo "Current WiFi network: $CURRENT_WIFI"
+
+# Run setup script without WiFi credentials (will use existing NetworkManager config)
+sudo bash setup_wlan_and_AP_modes.sh
+echo "Wordclock services setup completed successfully."
 
 echo ""
 echo "=== SETUP SUMMARY ==="
 echo "The wordclock is now configured with automatic WiFi management:"
-echo "• Home WiFi: $WIFI_SSID"
+echo "• Home WiFi: $CURRENT_WIFI (using existing configuration)"
 echo "• Fallback Hotspot: WordclockNet (password: WCKey2580)"
-echo "• After reboot, it will automatically try to connect to your WiFi"
+echo "• Network Manager: $(systemctl is-active NetworkManager)"
+echo "• After reboot, it will automatically try to connect to your existing WiFi"
 echo "• If WiFi fails, it will create the hotspot automatically"
 echo "• Access the wordclock at http://wordclock.local or http://192.168.4.1 (in hotspot mode)"
 
+# pull update script
+echo "=== STEP 10: Downloading and running pull update script ==="
+sudo bash pull_update.sh
+
+echo ""
+echo "=== FINAL VERIFICATION ==="
+echo "Checking iptables configuration..."
+
+if sudo iptables -t nat -L PREROUTING | grep -q "REDIRECT.*1880"; then
+    echo "✓ External port 80→1880 redirect rule is active"
+else
+    echo "✗ External port 80→1880 redirect rule is missing"
+fi
+
+if sudo iptables -t nat -L OUTPUT | grep -q "REDIRECT.*1880"; then
+    echo "✓ Local port 80→1880 redirect rule is active"
+else
+    echo "✗ Local port 80→1880 redirect rule is missing"
+fi
+
+if sudo iptables -L INPUT | grep -q "ACCEPT.*1880"; then
+    echo "✓ Node-RED dashboard port 1880 is open"
+else
+    echo "✗ Node-RED dashboard port 1880 access rule missing"
+fi
+
+if [ -f /etc/iptables/rules.v4 ]; then
+    echo "✓ iptables rules file exists"
+else
+    echo "✗ iptables rules file missing"
+fi
+
+echo "Checking services..."
+echo "• NetworkManager: $(systemctl is-active NetworkManager)"
+echo "• avahi-daemon: $(systemctl is-active avahi-daemon)"
+echo "• netfilter-persistent: $(systemctl is-active netfilter-persistent)"
+
+echo ""
 echo "=== INSTALLATION COMPLETE ==="
 echo "Installation complete. Please reboot now by entering: sudo reboot now"
+echo ""
+echo "After reboot, you should be able to access:"
+echo "• http://wordclock.local (if on same network) - redirects to Node-RED dashboard"
+echo "• http://wordclock.local:1880 (direct Node-RED dashboard access)"
+echo "• http://192.168.4.1 (if connected to WordclockNet hotspot)"
+echo "• Port 8980 is used for Amazon Echo/Alexa integration"

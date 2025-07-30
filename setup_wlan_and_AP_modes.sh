@@ -536,7 +536,22 @@ if [ $flagOptR == 0 ]; then
 fi
 
 if [ $flagOptS == 0 ] || [ $flagOptP == 0 ]; then
-  error "${SCRIPT_NAME} Requires the -s (station SSID) and -p (station password) options" && usage 1>&2 && exit 1
+  # Try to detect existing WiFi connection from NetworkManager
+  if systemctl is-active --quiet NetworkManager; then
+    EXISTING_WIFI=$(nmcli -t -f active,ssid dev wifi | grep '^yes' | cut -d: -f2 2>/dev/null || echo "")
+    if [ -n "$EXISTING_WIFI" ]; then
+      info "No WiFi credentials provided, but found existing connection: $EXISTING_WIFI"
+      info "Will configure wordclock services to use existing NetworkManager WiFi setup"
+      staSsid="$EXISTING_WIFI"
+      staPsk="[existing]"  # Placeholder since we'll use existing NetworkManager config
+      flagOptS=1
+      flagOptP=1
+    else
+      error "${SCRIPT_NAME} Requires the -s (station SSID) and -p (station password) options when no existing WiFi connection is found" && usage 1>&2 && exit 1
+    fi
+  else
+    error "${SCRIPT_NAME} Requires the -s (station SSID) and -p (station password) options" && usage 1>&2 && exit 1
+  fi
 fi
 shift $((${OPTIND} - 1))                      ## shift options
 
@@ -593,15 +608,34 @@ fi
 {
   scriptstart
   #== start your program here ==#
-  infotitle "Setting up dhcpcd configuration"
+  infotitle "Setting up NetworkManager configuration"
 
-  # Ensure dhcpcd is enabled (default on modern Pi OS)
-  exec_cmd "systemctl enable dhcpcd.service"
+  # Ensure NetworkManager is enabled and running (default on Pi OS Bookworm)
+  info "Configuring NetworkManager for modern Pi OS"
   
-  # Disable old networking services if they exist
-  if systemctl list-unit-files | grep -q '^networking.service'; then
-    exec_cmd "systemctl disable networking.service"
+  exec_cmd "systemctl enable NetworkManager.service"
+  exec_cmd "systemctl start NetworkManager.service"
+  
+  # Disable conflicting services
+  if systemctl list-unit-files | grep -q '^dhcpcd.service'; then
+    exec_cmd "systemctl disable dhcpcd.service"
+    exec_cmd "systemctl stop dhcpcd.service"
   fi
+  
+  # Create NetworkManager configuration
+  cat >/etc/NetworkManager/conf.d/wordclock.conf <<EOF
+[main]
+# Let NetworkManager manage all interfaces
+no-auto-default=*
+
+[keyfile]
+# Store connection files in system-connections
+path=/etc/NetworkManager/system-connections
+
+[device]
+# Manage wlan0 for both WiFi and AP modes
+wifi.scan-rand-mac-address=no
+EOF
   
   # Remove old network interfaces file if it exists
   if [ -f /etc/network/interfaces ]; then
@@ -609,241 +643,289 @@ fi
     info "Moved old /etc/network/interfaces to backup"
   fi
 
-  infotitle "Configuring dhcpcd for dual interface support"
+  infotitle "Creating WiFi configuration for NetworkManager"
 
-  # Create dhcpcd configuration
-  cat >/etc/dhcpcd.conf <<EOF
-# dhcpcd configuration for wordclock dual WiFi setup
-# See dhcpcd.conf(5) for details.
+  if [ "$staPsk" = "[existing]" ]; then
+    info "Using existing NetworkManager connection for ${staSsid}"
+    # Check if connection already exists
+    if ! nmcli connection show "$staSsid" >/dev/null 2>&1; then
+      warning "Expected NetworkManager connection '$staSsid' not found, but continuing..."
+    fi
+  else
+    info "Creating NetworkManager connection for ${staSsid}"
+    
+    # Create the NetworkManager connection file
+    cat >/etc/NetworkManager/system-connections/${staSsid}.nmconnection <<EOF
+[connection]
+id=${staSsid}
+uuid=$(uuidgen)
+type=wifi
+interface-name=wlan0
+autoconnect=true
+autoconnect-priority=100
 
-# Allow users of this group to interact with dhcpcd via the control socket.
-controlgroup netdev
+[wifi]
+mode=infrastructure
+ssid=${staSsid}
 
-# Inform the DHCP server of our hostname for DDNS.
-hostname
+[wifi-security]
+auth-alg=open
+key-mgmt=wpa-psk
+psk=${staPsk}
 
-# Use the hardware address of the interface for the Client ID.
-clientid
+[ipv4]
+method=auto
 
-# Persist interface configuration when dhcpcd exits.
-persistent
-
-# vendorclassid is set to blank to avoid sending the default of
-# dhcpcd-<version>:<os>:<machine>:<platform>
-vendorclassid
-
-# A list of options to request from the DHCP server.
-option rapid_commit
-option domain_name_servers, domain_name, domain_search, host_name
-option classless_static_routes
-option interface_mtu
-
-# Respect the network MTU. This is applied to DHCP routes.
-option interface_mtu
-
-# Most distributions have NTP support.
-#option ntp_servers
-
-# A ServerID is required by RFC2131.
-require dhcp_server_identifier
-
-# Generate SLAAC address using the hardware address of the interface
-slaac hwaddr
-
-# OR generate Stable Private IPv6 Addresses based from the DUID
-#slaac private
-
-# Static IP configuration for AP mode (ap0)
-interface ap0
-static ip_address=192.168.4.1/24
-nohook wpa_supplicant
-
-# DHCP configuration for client mode (wlan0)
-interface wlan0
-# Use DHCP for client mode - no static config needed
+[ipv6]
+addr-gen-mode=stable-privacy
+method=auto
 EOF
 
-  infotitle "Creating wpa_supplicant configuration for station mode"
+    exec_cmd "chmod 600 /etc/NetworkManager/system-connections/${staSsid}.nmconnection"
+    exec_cmd "chown root:root /etc/NetworkManager/system-connections/${staSsid}.nmconnection"
+    
+    # Reload NetworkManager to pick up new connection
+    exec_cmd "systemctl reload NetworkManager"
+  fi
 
-  cat >/etc/wpa_supplicant/wpa_supplicant.conf <<EOF
-country=DE
-ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-update_config=1
+  # Skipping wpa_supplicant.conf creation (using only NetworkManager)
 
-network={
-    ssid="${staSsid}"
-    psk="${staPsk}"
-}
-EOF
+  infotitle "Creating NetworkManager AP profile"
 
-  exec_cmd "chmod 600 /etc/wpa_supplicant/wpa_supplicant.conf"
+  # Create NetworkManager AP connection profile instead of hostapd
+  info "Creating NetworkManager AP connection profile: ${apSsid}"
+  
+  # Remove any existing AP profile first
+  exec_cmd "nmcli connection delete '${apSsid}' 2>/dev/null || true"
+  
+  # Create AP profile using NetworkManager
+  exec_cmd "nmcli connection add type wifi ifname wlan0 con-name '${apSsid}' autoconnect false ssid '${apSsid}'"
+  exec_cmd "nmcli connection modify '${apSsid}' 802-11-wireless.mode ap 802-11-wireless.band bg ipv4.method shared"
+  exec_cmd "nmcli connection modify '${apSsid}' wifi-sec.key-mgmt wpa-psk"
+  exec_cmd "nmcli connection modify '${apSsid}' wifi-sec.psk '${apPsk}'"
+  exec_cmd "nmcli connection modify '${apSsid}' 802-11-wireless.channel 7"
+  exec_cmd "nmcli connection modify '${apSsid}' ipv4.addresses 192.168.4.1/24"
+  exec_cmd "nmcli connection modify '${apSsid}' ipv4.gateway 192.168.4.1"
+  exec_cmd "nmcli connection modify '${apSsid}' ipv4.dns 192.168.4.1"
+  
+  # Disable auto-connect for AP profile (only activate manually or via script)
+  exec_cmd "nmcli connection modify '${apSsid}' connection.autoconnect false"
+  
+  info "NetworkManager AP profile created successfully"
 
-  infotitle "Installing and configuring hostapd for AP mode"
+  infotitle "Creating wordclock-switcher script (RaspberryConnect style)"
 
-  # Install hostapd and dnsmasq
-  exec_cmd "apt-get update"
-  exec_cmd "apt-get install -y hostapd dnsmasq"
+  # Create the main wordclock switcher script using NetworkManager approach
 
-  # Configure hostapd
-  cat >/etc/hostapd/hostapd.conf <<EOF
-interface=ap0
-driver=nl80211
-ssid=${apSsid}
-hw_mode=g
-channel=7
-wmm_enabled=0
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
-wpa=2
-wpa_passphrase=${apPsk}
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
-rsn_pairwise=CCMP
-country_code=DE
-EOF
-
-  # Configure dnsmasq for DHCP on AP
-  cat >/etc/dnsmasq.conf <<EOF
-# Configuration for wordclock AP mode
-interface=ap0
-dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
-domain=local
-address=/wordclock.local/192.168.4.1
-EOF
-
-  # Point hostapd to config file
-  exec_cmd "sed -i 's|^#DAEMON_CONF=.*|DAEMON_CONF=\"/etc/hostapd/hostapd.conf\"|' /etc/default/hostapd"
-
-  infotitle "Creating systemd services for automatic WiFi with AP fallback"
-
-  # Create WiFi connection monitoring script
-  cat >/usr/local/bin/wordclock-wifi-monitor.sh <<'EOF'
+  cat >/usr/local/bin/wordclock-switcher.sh <<'EOF'
 #!/bin/bash
+
+# Wordclock WiFi Switcher - RaspberryConnect Style
+# Uses pure NetworkManager approach for reliability
 
 LOGFILE="/var/log/wordclock-wifi.log"
 WIFI_TIMEOUT=30
-CHECK_INTERVAL=10
-MAX_RETRIES=3
+DEVICE="wlan0"
+AP_SSID="WordclockNet"
 
 log_message() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOGFILE"
 }
 
-cleanup_interfaces() {
-    log_message "Cleaning up interfaces..."
-    killall wpa_supplicant 2>/dev/null || true
-    dhcpcd -k wlan0 2>/dev/null || true
-    systemctl stop hostapd 2>/dev/null || true
-    systemctl stop dnsmasq 2>/dev/null || true
-    ip link set ap0 down 2>/dev/null || true
-    ip link delete ap0 2>/dev/null || true
-    sleep 2
+# Function to get current active WiFi connection
+get_active_wifi() {
+    active_conn="$(nmcli -t -f TYPE,NAME,DEVICE con show --active | grep "$DEVICE" | head -1)"
+    if [ -n "$active_conn" ]; then
+        echo "$active_conn" | cut -d: -f2
+    else
+        echo ""
+    fi
 }
 
-start_station_mode() {
-    log_message "Starting station mode..."
-    cleanup_interfaces
-    
-    rfkill unblock wlan
-    ifconfig wlan0 up
-    
-    log_message "Starting wpa_supplicant..."
-    wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf
-    
-    log_message "Starting DHCP client..."
-    dhcpcd wlan0
-    
-    # Wait for connection with timeout
-    log_message "Waiting for WiFi connection (timeout: ${WIFI_TIMEOUT}s)..."
-    for i in $(seq 1 $WIFI_TIMEOUT); do
-        if wpa_cli -i wlan0 status | grep -q "wpa_state=COMPLETED"; then
-            if ip route | grep -q "default.*wlan0"; then
-                log_message "WiFi connected successfully!"
-                return 0
-            fi
+# Function to check if current connection is AP mode
+is_active_ap() {
+    active="$(get_active_wifi)"
+    if [ -n "$active" ]; then
+        mode="$(nmcli con show "$active" | grep 'wireless.mode' | awk '{print $2}')"
+        if [ "$mode" = "ap" ]; then
+            return 0
         fi
-        sleep 1
-    done
-    
-    log_message "WiFi connection failed or timed out"
+    fi
     return 1
 }
 
-start_ap_mode() {
-    log_message "Starting AP mode..."
-    cleanup_interfaces
+# Function to switch to WiFi station mode (try any available profile)
+switch_to_wifi() {
+    log_message "Switching to WiFi station mode (auto-connect any profile)"
+    # Disconnect any active AP connection
+    active="$(get_active_wifi)"
+    if [ -n "$active" ] && is_active_ap; then
+        log_message "Deactivating AP connection: $active"
+        nmcli connection down "$active" 2>/dev/null || true
+    fi
+    # Enable WiFi radio and let NetworkManager auto-connect
+    nmcli radio wifi on
+    nmcli device connect "$DEVICE" 2>/dev/null || true
+    # Wait for connection to establish
+    for i in $(seq 1 $WIFI_TIMEOUT); do
+        if nmcli device status | grep "$DEVICE" | grep -q "connected"; then
+            current_ip="$(ip route get 8.8.8.8 2>/dev/null | grep -oP 'src \K[^ ]+' || echo 'unknown')"
+            log_message "WiFi connected successfully! IP: $current_ip"
+            return 0
+        fi
+        sleep 1
+    done
+    log_message "WiFi connection timed out"
+    return 1
+}
+
+# Function to switch to AP mode
+switch_to_ap() {
+    log_message "Switching to AP mode: $AP_SSID"
     
-    log_message "Creating AP interface..."
-    iw dev wlan0 interface add ap0 type __ap
-    ifconfig ap0 up
+    # Disconnect any active WiFi connection
+    active="$(get_active_wifi)"
+    if [ -n "$active" ] && ! is_active_ap; then
+        log_message "Deactivating WiFi connection: $active"
+        nmcli connection down "$active" 2>/dev/null || true
+    fi
     
-    log_message "Starting hostapd and dnsmasq..."
-    systemctl start hostapd
-    systemctl start dnsmasq
-    
-    # Verify AP is running
-    if systemctl is-active --quiet hostapd && systemctl is-active --quiet dnsmasq; then
-        log_message "AP mode started successfully!"
-        return 0
+    # Activate AP connection
+    if nmcli connection show "$AP_SSID" >/dev/null 2>&1; then
+        log_message "Activating AP connection: $AP_SSID"
+        if nmcli connection up "$AP_SSID" 2>/dev/null; then
+            sleep 5  # Give AP time to start
+            if nmcli device status | grep "$DEVICE" | grep -q "connected"; then
+                log_message "AP mode activated successfully! SSID: $AP_SSID"
+                log_message "Connect to http://192.168.4.1 to access wordclock"
+                return 0
+            else
+                log_message "AP activation failed - device not connected"
+                return 1
+            fi
+        else
+            log_message "Failed to activate AP connection"
+            return 1
+        fi
     else
-        log_message "Failed to start AP mode"
+        log_message "AP connection profile '$AP_SSID' not found"
         return 1
     fi
 }
 
-# Main logic
-log_message "=== Wordclock WiFi Monitor Starting ==="
-
-retry_count=0
-while [ $retry_count -lt $MAX_RETRIES ]; do
-    log_message "Connection attempt $((retry_count + 1)) of $MAX_RETRIES"
-    
-    if start_station_mode; then
-        log_message "Station mode successful, monitoring connection..."
-        
-        # Monitor connection in background
-        while true; do
-            sleep $CHECK_INTERVAL
-            
-            if ! wpa_cli -i wlan0 status | grep -q "wpa_state=COMPLETED" || ! ip route | grep -q "default.*wlan0"; then
-                log_message "WiFi connection lost, retrying..."
-                break
-            fi
-        done
-        
-        retry_count=$((retry_count + 1))
+# Function to check current connection quality
+check_connection() {
+    if nmcli device status | grep "$DEVICE" | grep -q "connected"; then
+        # Check if we can reach the internet
+        if ping -c 1 -W 5 8.8.8.8 >/dev/null 2>&1; then
+            return 0  # Connection is good
+        else
+            log_message "Device connected but no internet access"
+            return 1
+        fi
     else
-        retry_count=$((retry_count + 1))
+        log_message "Device not connected"
+        return 1
     fi
-done
+}
 
-log_message "Max retries reached, falling back to AP mode..."
-if start_ap_mode; then
-    log_message "Fallback to AP mode successful"
-    exit 0
-else
-    log_message "Failed to start AP mode, system may need manual intervention"
-    exit 1
-fi
+# Main logic based on command line argument
+case "${1:-auto}" in
+    wifi|station)
+        log_message "=== Manual WiFi Mode Requested ==="
+        switch_to_wifi
+        exit $?
+        ;;
+    ap|hotspot)
+        log_message "=== Manual AP Mode Requested ==="
+        switch_to_ap
+        exit $?
+        ;;
+    auto|"")
+        log_message "=== Automatic Mode: Checking WiFi/AP status ==="
+        
+        # Check current state and connection quality
+        if is_active_ap; then
+            log_message "Currently in AP mode, checking if WiFi is available..."
+            if switch_to_wifi; then
+                log_message "Successfully switched from AP to WiFi"
+                exit 0
+            else
+                log_message "WiFi not available, staying in AP mode"
+                exit 0
+            fi
+        else
+            # Currently in WiFi mode or disconnected
+            active="$(get_active_wifi)"
+            if [ -n "$active" ]; then
+                log_message "Currently connected to: $active"
+                if check_connection; then
+                    log_message "WiFi connection is working fine"
+                    exit 0
+                else
+                    log_message "WiFi connection has issues, trying to reconnect..."
+                    if switch_to_wifi; then
+                        log_message "WiFi reconnection successful"
+                        exit 0
+                    else
+                        log_message "WiFi reconnection failed, switching to AP mode"
+                        switch_to_ap
+                        exit $?
+                    fi
+                fi
+            else
+                log_message "No active connection, trying WiFi first..."
+                if switch_to_wifi; then
+                    log_message "WiFi connection successful"
+                    exit 0
+                else
+                    log_message "WiFi failed, falling back to AP mode"
+                    switch_to_ap
+                    exit $?
+                fi
+            fi
+        fi
+        ;;
+    *)
+        echo "Usage: $0 [wifi|ap|auto]"
+        echo "  wifi/station - Force WiFi station mode"
+        echo "  ap/hotspot   - Force AP hotspot mode"  
+        echo "  auto         - Automatic mode (default)"
+        exit 1
+        ;;
+esac
 EOF
 
-  exec_cmd "chmod +x /usr/local/bin/wordclock-wifi-monitor.sh"
+  exec_cmd "chmod +x /usr/local/bin/wordclock-switcher.sh"
 
-  # Create the main wordclock WiFi service (auto-fallback)
+  # Create systemd timer for automatic checking (RaspberryConnect style)
+  cat >/etc/systemd/system/wordclock-wifi.timer <<EOF
+[Unit]
+Description=Wordclock WiFi Check Timer
+Requires=wordclock-wifi.service
+
+[Timer]
+OnBootSec=30sec
+OnCalendar=*:0/2
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+
+  # Create the main wordclock WiFi service (called by timer)
   cat >/etc/systemd/system/wordclock-wifi.service <<EOF
 [Unit]
-Description=Wordclock WiFi with AP Fallback
-After=dhcpcd.service
-Wants=dhcpcd.service
+Description=Wordclock WiFi Management (NetworkManager)
+After=NetworkManager.service multi-user.target
+Wants=NetworkManager.service
 
 [Service]
-Type=simple
-ExecStart=/usr/local/bin/wordclock-wifi-monitor.sh
-Restart=always
-RestartSec=10
+Type=oneshot
+ExecStart=/usr/local/bin/wordclock-switcher.sh auto
 StandardOutput=journal
 StandardError=journal
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 [Install]
 WantedBy=multi-user.target
@@ -853,14 +935,13 @@ EOF
   cat >/etc/systemd/system/wordclock-station.service <<EOF
 [Unit]
 Description=Wordclock Station Mode (Manual)
-After=dhcpcd.service
-Conflicts=wordclock-ap.service wordclock-wifi.service
+After=NetworkManager.service
 
 [Service]
 Type=oneshot
-RemainAfterExit=yes
-ExecStart=/bin/bash -c 'systemctl stop wordclock-wifi; ip link set ap0 down 2>/dev/null || true; ip link delete ap0 2>/dev/null || true; systemctl stop hostapd; systemctl stop dnsmasq; rfkill unblock wlan; ifconfig wlan0 up; wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf; dhcpcd wlan0'
-ExecStop=/bin/bash -c 'killall wpa_supplicant 2>/dev/null || true; dhcpcd -k wlan0 2>/dev/null || true'
+ExecStart=/usr/local/bin/wordclock-switcher.sh wifi
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
@@ -870,14 +951,13 @@ EOF
   cat >/etc/systemd/system/wordclock-ap.service <<EOF
 [Unit]
 Description=Wordclock Access Point Mode (Manual)
-After=dhcpcd.service
-Conflicts=wordclock-station.service wordclock-wifi.service
+After=NetworkManager.service
 
 [Service]
 Type=oneshot
-RemainAfterExit=yes
-ExecStart=/bin/bash -c 'systemctl stop wordclock-wifi; killall wpa_supplicant 2>/dev/null || true; dhcpcd -k wlan0 2>/dev/null || true; iw dev wlan0 interface add ap0 type __ap; ifconfig ap0 up; systemctl start hostapd; systemctl start dnsmasq'
-ExecStop=/bin/bash -c 'systemctl stop hostapd; systemctl stop dnsmasq; ip link set ap0 down; ip link delete ap0'
+ExecStart=/usr/local/bin/wordclock-switcher.sh ap
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
@@ -886,45 +966,71 @@ EOF
   # Reload systemd
   exec_cmd "systemctl daemon-reload"
 
-  infotitle "Setting up automatic WiFi with AP fallback"
+  infotitle "Setting up automatic WiFi with AP fallback (RaspberryConnect method)"
 
-  # Enable the automatic WiFi service by default (always auto mode)
+  # Enable the timer-based WiFi management (automatic mode)
+  exec_cmd "systemctl enable wordclock-wifi.timer"
   exec_cmd "systemctl enable wordclock-wifi.service"
   exec_cmd "systemctl disable wordclock-station.service 2>/dev/null || true"
   exec_cmd "systemctl disable wordclock-ap.service 2>/dev/null || true"
   
-  info "Automatic WiFi with AP fallback enabled by default"
+  # Start the timer to begin automatic management
+  exec_cmd "systemctl start wordclock-wifi.timer"
+  
+  info "Timer-based WiFi management enabled (checks every 2 minutes)"
   info "Station WiFi: ${staSsid}"
   info "Fallback AP: ${apSsid} (password: ${apPsk})"
 
-  infotitle "SETUP COMPLETE - REBOOT REQUIRED"
+  infotitle "SETUP COMPLETE - NETWORKMANAGER APPROACH"
   
   echo ""
-  echo "🎉 Wordclock WiFi Setup Complete!"
+  echo "🎉 Wordclock WiFi Setup Complete (RaspberryConnect Style)!"
   echo ""
   echo "CONFIGURATION SUMMARY:"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   echo "📶 Home WiFi: ${staSsid}"
   echo "🔥 Fallback Hotspot: ${apSsid} (password: ${apPsk})"
-  echo "🤖 Mode: AUTOMATIC (WiFi first, hotspot fallback)"
+  echo "🤖 Mode: AUTOMATIC (Timer-based checks every 2 minutes)"
+  echo "🔧 Network Manager: Pure NetworkManager (no hostapd/dnsmasq)"
+  echo "⏰ Method: RaspberryConnect timer approach"
   echo ""
   echo "BEHAVIOR AFTER REBOOT:"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "1. 🔄 System will automatically try to connect to: ${staSsid}"
-  echo "2. ✅ If successful: Wordclock accessible at http://wordclock.local"
-  echo "3. ❌ If WiFi fails: Automatically creates hotspot '${apSsid}'"
-  echo "4. 📱 Connect to hotspot and access wordclock at http://192.168.4.1"
-  echo "5. 🔍 System continuously monitors and retries WiFi connection"
+  echo "1. 🔄 Timer checks WiFi status every 2 minutes"
+  echo "2. ✅ If WiFi available: Connects to ${staSsid}"
+  echo "3. ❌ If WiFi fails: Automatically creates NetworkManager AP '${apSsid}'"
+  echo "4. 📱 Connect to AP and access wordclock at http://192.168.4.1"
+  echo "5. � System continuously checks and switches as needed"
+  echo ""
+  echo "NETWORKMANAGER FEATURES:"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "🔧 Modern Pi OS Bookworm compatibility"
+  echo "🏠 Pure NetworkManager - no hostapd conflicts"
+  echo "📱 Change WiFi: nmcli device wifi connect 'NewNetwork'"
+  echo "📊 View connections: nmcli connection show"
+  echo "🔍 Scan networks: nmcli device wifi list"
+  echo "🔄 Both WiFi and AP managed as connection profiles"
   echo ""
   echo "MANUAL CONTROL COMMANDS:"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  echo "📊 View status:          sudo systemctl status wordclock-wifi"
-  echo "📜 View live logs:       sudo journalctl -u wordclock-wifi -f"
-  echo "📝 View detailed logs:   sudo tail -f /var/log/wordclock-wifi.log"
+  echo "📊 View timer status:       sudo systemctl status wordclock-wifi.timer"
+  echo "📜 View logs:              sudo journalctl -u wordclock-wifi -f"
+  echo "📝 View detailed logs:     sudo tail -f /var/log/wordclock-wifi.log"
   echo ""
-  echo "🔧 Force WiFi mode:      sudo systemctl start wordclock-station"
-  echo "📡 Force hotspot mode:   sudo systemctl start wordclock-ap"
-  echo "🤖 Return to auto mode:  sudo systemctl start wordclock-wifi"
+  echo "🔧 Force WiFi mode:        sudo systemctl start wordclock-station"
+  echo "📡 Force hotspot mode:     sudo systemctl start wordclock-ap"
+  echo "🤖 Return to auto mode:    sudo systemctl start wordclock-wifi.timer"
+  echo ""
+  echo "� Manual switch commands:"
+  echo "   sudo /usr/local/bin/wordclock-switcher.sh wifi    # Force WiFi"
+  echo "   sudo /usr/local/bin/wordclock-switcher.sh ap      # Force AP"
+  echo "   sudo /usr/local/bin/wordclock-switcher.sh auto    # Auto-decide"
+  echo ""
+  echo "📱 NetworkManager commands:"
+  echo "   nmcli device wifi connect 'NewNetwork'           # Connect to new WiFi"
+  echo "   nmcli connection up '${staSsid}'                  # Activate WiFi profile"
+  echo "   nmcli connection up '${apSsid}'                   # Activate AP profile"
+  echo "   nmcli connection show                             # List all profiles"
   echo ""
   echo "⚠️  IMPORTANT: Run 'sudo reboot now' to activate the new configuration!"
   echo ""
