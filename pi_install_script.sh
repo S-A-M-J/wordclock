@@ -106,26 +106,29 @@ echo "Adding iptables NAT rules..."
 # Redirect external traffic from port 80 to Node-RED dashboard (port 1880)
 sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 1880
 
+# Redirect external traffic from port 443 to Node-RED dashboard (port 1880)
+sudo iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 1880
+
 # Redirect local loopback traffic from port 80 to Node-RED dashboard (port 1880)  
 sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 80 -j REDIRECT --to-port 1880
+
+# Redirect local loopback traffic from port 443 to Node-RED dashboard (port 1880)
+sudo iptables -t nat -A OUTPUT -o lo -p tcp --dport 443 -j REDIRECT --to-port 1880
 
 # Allow traffic to Node-RED dashboard port
 sudo iptables -A INPUT -p tcp --dport 1880 -j ACCEPT
 
-# Allow traffic to Amazon Echo hub port (if needed)
-sudo iptables -A INPUT -p tcp --dport 8980 -j ACCEPT
-
 # Verify the rules were added
 if sudo iptables -t nat -L PREROUTING | grep -q "REDIRECT.*1880"; then
-    echo "✓ External port 80→1880 redirect rule added successfully."
+    echo "✓ External port redirects to Node-RED (1880) added successfully."
 else
-    echo "✗ Warning: Failed to add external redirect rule."
+    echo "✗ Warning: Failed to add external redirect rules."
 fi
 
 if sudo iptables -t nat -L OUTPUT | grep -q "REDIRECT.*1880"; then
-    echo "✓ Local port 80→1880 redirect rule added successfully."
+    echo "✓ Local port redirects to Node-RED (1880) added successfully."
 else
-    echo "✗ Warning: Failed to add local redirect rule."
+    echo "✗ Warning: Failed to add local redirect rules."
 fi
 
 # Save the rules
@@ -179,7 +182,7 @@ echo "Setting up wordclock services using existing WiFi configuration..."
 echo "Current WiFi network: $CURRENT_WIFI"
 
 # Run setup script without WiFi credentials (will use existing NetworkManager config)
-sudo bash setup_wlan_and_AP_modes.sh
+#sudo bash setup_wlan_and_AP_modes.sh
 echo "Wordclock services setup completed successfully."
 
 echo ""
@@ -201,15 +204,15 @@ echo "=== FINAL VERIFICATION ==="
 echo "Checking iptables configuration..."
 
 if sudo iptables -t nat -L PREROUTING | grep -q "REDIRECT.*1880"; then
-    echo "✓ External port 80→1880 redirect rule is active"
+    echo "✓ External port 80/443→1880 redirect rules are active"
 else
-    echo "✗ External port 80→1880 redirect rule is missing"
+    echo "✗ External port 80/443→1880 redirect rules are missing"
 fi
 
 if sudo iptables -t nat -L OUTPUT | grep -q "REDIRECT.*1880"; then
-    echo "✓ Local port 80→1880 redirect rule is active"
+    echo "✓ Local port 80/443→1880 redirect rules are active"
 else
-    echo "✗ Local port 80→1880 redirect rule is missing"
+    echo "✗ Local port 80/443→1880 redirect rules are missing"
 fi
 
 if sudo iptables -L INPUT | grep -q "ACCEPT.*1880"; then
@@ -234,7 +237,8 @@ echo "=== INSTALLATION COMPLETE ==="
 echo "Installation complete. Please reboot now by entering: sudo reboot now"
 echo ""
 echo "After reboot, you should be able to access:"
-echo "• http://wordclock.local (if on same network) - redirects to Node-RED dashboard"
+echo "• http://wordclock.local (port 80 redirects to Node-RED dashboard on port 1880)"
+echo "• https://wordclock.local (port 443 redirects to Node-RED dashboard on port 1880)"
 echo "• http://wordclock.local:1880 (direct Node-RED dashboard access)"
 echo "• http://192.168.4.1 (if connected to WordclockNet hotspot)"
-echo "• Port 8980 is used for Amazon Echo/Alexa integration"
+echo "• Ports 80 and 443 are redirected to the Node-RED dashboard on port 1880"

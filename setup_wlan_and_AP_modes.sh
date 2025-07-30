@@ -724,12 +724,48 @@ EOF
 # Uses pure NetworkManager approach for reliability
 
 LOGFILE="/var/log/wordclock-wifi.log"
-WIFI_TIMEOUT=30
+WIFI_TIMEOUT=15        # How long to wait for a single WiFi connection attempt (seconds)
 DEVICE="wlan0"
 AP_SSID="WordclockNet"
+FAILURE_COUNT_FILE="/tmp/wordclock-wifi-failures"
+MAX_FAILURES=2         # After this many failed attempts, force AP mode permanently
 
 log_message() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOGFILE"
+}
+
+# Function to get current failure count
+get_failure_count() {
+    if [ -f "$FAILURE_COUNT_FILE" ]; then
+        cat "$FAILURE_COUNT_FILE" 2>/dev/null || echo "0"
+    else
+        echo "0"
+    fi
+}
+
+# Function to increment failure count
+increment_failure_count() {
+    local count=$(get_failure_count)
+    count=$((count + 1))
+    echo "$count" > "$FAILURE_COUNT_FILE"
+    log_message "WiFi failure count increased to: $count"
+    echo "$count"
+}
+
+# Function to reset failure count
+reset_failure_count() {
+    rm -f "$FAILURE_COUNT_FILE" 2>/dev/null
+    log_message "WiFi failure count reset (successful connection)"
+}
+
+# Function to check if we should force AP mode due to failures
+should_force_ap() {
+    local count=$(get_failure_count)
+    if [ "$count" -ge "$MAX_FAILURES" ]; then
+        log_message "Max failures ($MAX_FAILURES) reached, forcing AP mode"
+        return 0
+    fi
+    return 1
 }
 
 # Function to get current active WiFi connection
@@ -766,16 +802,22 @@ switch_to_wifi() {
     # Enable WiFi radio and let NetworkManager auto-connect
     nmcli radio wifi on
     nmcli device connect "$DEVICE" 2>/dev/null || true
-    # Wait for connection to establish
+    
+    # Wait for connection to establish (WIFI_TIMEOUT controls single attempt duration)
+    # This is different from MAX_FAILURES which counts separate failed attempts over time
+    # WIFI_TIMEOUT = how long to wait for THIS attempt (30 seconds)
+    # MAX_FAILURES = how many separate attempts before giving up permanently (5 attempts)
     for i in $(seq 1 $WIFI_TIMEOUT); do
         if nmcli device status | grep "$DEVICE" | grep -q "connected"; then
             current_ip="$(ip route get 8.8.8.8 2>/dev/null | grep -oP 'src \K[^ ]+' || echo 'unknown')"
             log_message "WiFi connected successfully! IP: $current_ip"
+            reset_failure_count
             return 0
         fi
         sleep 1
     done
     log_message "WiFi connection timed out"
+    increment_failure_count
     return 1
 }
 
@@ -833,16 +875,31 @@ check_connection() {
 case "${1:-auto}" in
     wifi|station)
         log_message "=== Manual WiFi Mode Requested ==="
+        reset_failure_count  # Reset counter on manual override
         switch_to_wifi
         exit $?
         ;;
     ap|hotspot)
         log_message "=== Manual AP Mode Requested ==="
+        reset_failure_count  # Reset counter on manual override
         switch_to_ap
         exit $?
         ;;
+    reset)
+        log_message "=== Resetting WiFi failure counter ==="
+        reset_failure_count
+        log_message "Failure counter reset successfully"
+        exit 0
+        ;;
     auto|"")
         log_message "=== Automatic Mode: Checking WiFi/AP status ==="
+        
+        # Check if we should force AP mode due to repeated failures
+        if should_force_ap; then
+            log_message "Forcing AP mode due to repeated WiFi failures"
+            switch_to_ap
+            exit $?
+        fi
         
         # Check current state and connection quality
         if is_active_ap; then
@@ -861,6 +918,7 @@ case "${1:-auto}" in
                 log_message "Currently connected to: $active"
                 if check_connection; then
                     log_message "WiFi connection is working fine"
+                    reset_failure_count
                     exit 0
                 else
                     log_message "WiFi connection has issues, trying to reconnect..."
@@ -887,10 +945,13 @@ case "${1:-auto}" in
         fi
         ;;
     *)
-        echo "Usage: $0 [wifi|ap|auto]"
+        echo "Usage: $0 [wifi|ap|auto|reset]"
         echo "  wifi/station - Force WiFi station mode"
         echo "  ap/hotspot   - Force AP hotspot mode"  
         echo "  auto         - Automatic mode (default)"
+        echo "  reset        - Reset WiFi failure counter"
+        echo ""
+        echo "Failure counter: $(get_failure_count)/$MAX_FAILURES"
         exit 1
         ;;
 esac
@@ -1025,12 +1086,39 @@ EOF
   echo "   sudo /usr/local/bin/wordclock-switcher.sh wifi    # Force WiFi"
   echo "   sudo /usr/local/bin/wordclock-switcher.sh ap      # Force AP"
   echo "   sudo /usr/local/bin/wordclock-switcher.sh auto    # Auto-decide"
+  echo "   sudo /usr/local/bin/wordclock-switcher.sh reset   # Reset failure counter"
   echo ""
   echo "📱 NetworkManager commands:"
   echo "   nmcli device wifi connect 'NewNetwork'           # Connect to new WiFi"
   echo "   nmcli connection up '${staSsid}'                  # Activate WiFi profile"
   echo "   nmcli connection up '${apSsid}'                   # Activate AP profile"
   echo "   nmcli connection show                             # List all profiles"
+  echo ""
+  echo "🔧 ADDING ADDITIONAL WIFI NETWORKS:"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "The system will automatically try any saved WiFi networks. To add more:"
+  echo ""
+  echo "📶 Method 1 - Command line (easiest):"
+  echo "   sudo nmcli device wifi connect 'NewNetwork' password 'password123'"
+  echo "   # This creates a new profile and connects immediately"
+  echo ""
+  echo "📄 Method 2 - Manual profile creation:"
+  echo "   # Create file: /etc/NetworkManager/system-connections/NewNetwork.nmconnection"
+  echo "   # Copy the format from the existing ${staSsid}.nmconnection file"
+  echo "   # Change: id=, ssid=, and psk= values"
+  echo "   # Set permissions: sudo chmod 600 /etc/NetworkManager/system-connections/NewNetwork.nmconnection"
+  echo "   # Reload: sudo systemctl reload NetworkManager"
+  echo ""
+  echo "🔄 Priority system:"
+  echo "   # Higher autoconnect-priority = preferred network"
+  echo "   sudo nmcli connection modify 'NewNetwork' connection.autoconnect-priority 200"
+  echo "   # Default priority is 100, so 200 means this network is preferred"
+  echo ""
+  echo "📋 Useful commands:"
+  echo "   nmcli device wifi list                           # Scan for available networks"
+  echo "   nmcli connection show                             # List all saved profiles"
+  echo "   nmcli connection delete 'NetworkName'            # Remove a saved profile"
+  echo "   nmcli connection modify 'Net' connection.autoconnect false  # Disable auto-connect"
   echo ""
   echo "⚠️  IMPORTANT: Run 'sudo reboot now' to activate the new configuration!"
   echo ""
